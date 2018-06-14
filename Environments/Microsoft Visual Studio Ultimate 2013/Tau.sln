@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Others", "Others", "{B4E3E2
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Console", "Projects\Others\Console\Console.vcxproj", "{6DD8B7CA-2924-474F-BCB5-A50979C14F5F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{14D28B9A-C10D-42A9-B3B9-B35ABA587E59}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tau", "Projects\Libraries\Tau\Tau.vcxproj", "{A75267CB-0AF5-4687-9F1C-2A12398E33B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -17,11 +21,16 @@ Global
 		{6DD8B7CA-2924-474F-BCB5-A50979C14F5F}.Debug|Win32.Build.0 = Debug|Win32
 		{6DD8B7CA-2924-474F-BCB5-A50979C14F5F}.Release|Win32.ActiveCfg = Release|Win32
 		{6DD8B7CA-2924-474F-BCB5-A50979C14F5F}.Release|Win32.Build.0 = Release|Win32
+		{A75267CB-0AF5-4687-9F1C-2A12398E33B4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A75267CB-0AF5-4687-9F1C-2A12398E33B4}.Debug|Win32.Build.0 = Debug|Win32
+		{A75267CB-0AF5-4687-9F1C-2A12398E33B4}.Release|Win32.ActiveCfg = Release|Win32
+		{A75267CB-0AF5-4687-9F1C-2A12398E33B4}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6DD8B7CA-2924-474F-BCB5-A50979C14F5F} = {B4E3E295-E231-4ED3-8343-82BADB1CA00C}
+		{A75267CB-0AF5-4687-9F1C-2A12398E33B4} = {14D28B9A-C10D-42A9-B3B9-B35ABA587E59}
 	EndGlobalSection
 EndGlobal
