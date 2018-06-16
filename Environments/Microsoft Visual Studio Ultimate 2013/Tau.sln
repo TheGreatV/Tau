@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Others", "Others", "{B4E3E295-E231-4ED3-8343-82BADB1CA00C}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Console", "Projects\Others\Console\Console.vcxproj", "{6DD8B7CA-2924-474F-BCB5-A50979C14F5F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A75267CB-0AF5-4687-9F1C-2A12398E33B4} = {A75267CB-0AF5-4687-9F1C-2A12398E33B4}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{14D28B9A-C10D-42A9-B3B9-B35ABA587E59}"
 EndProject

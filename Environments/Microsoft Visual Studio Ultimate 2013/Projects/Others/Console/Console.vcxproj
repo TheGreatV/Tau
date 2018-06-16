@@ -35,10 +35,12 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\[Tau] Common Project Properties (Debug).props" />
     <Import Project="..\[Tau] Others - Group.props" />
+    <Import Project="..\..\Libraries\Tau\[Tau] Libraries-Tau - User.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\[Tau] Common Project Properties (Release).props" />
+    <Import Project="..\..\Libraries\Tau\[Tau] Libraries-Tau - User.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
