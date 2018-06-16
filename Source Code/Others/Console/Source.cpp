@@ -22,5 +22,9 @@ void main()
 	std::cout << "is string: " << x.Is<Tau::String>() << std::endl;
 	std::cout << "is number: " << x.Is<Tau::Number>() << std::endl;
 
+	x = Tau::Array();
+
+	std::cout << "is array: " << x.Is<Tau::Array>() << std::endl;
+	
 	std::system("pause");
 }

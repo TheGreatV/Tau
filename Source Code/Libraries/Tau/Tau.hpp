@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 
 namespace Tau
@@ -63,8 +64,7 @@ namespace Tau
 	protected:
 		inline Object(const std::shared_ptr<Proxy>& proxy_):
 			proxy(proxy_)
-		{
-		}
+		{}
 	public:
 		inline Object(const std::nullptr_t&);
 		inline Object(const bool& value_);
@@ -73,6 +73,7 @@ namespace Tau
 		inline Object(const double& value_);
 		inline Object(const std::string& value_);
 		inline Object(const char * const value_);
+		inline Object(const std::initializer_list<Object>& value_);
 		// TODO: implicit constructors
 	public:
 		inline Object operator [] (const Object& key_) const;
@@ -156,8 +157,7 @@ namespace Tau
 		public:
 			inline Proxy(const bool& value_):
 				value(value_)
-			{
-			}
+			{}
 		public:
 			inline Object operator [] (const Object& key_) const override
 			{
@@ -207,8 +207,7 @@ namespace Tau
 	protected:
 		class Proxy:
 			public Object::Proxy
-		{
-		};
+		{};
 		class Decimal;
 	public:
 		inline Number() = default;
@@ -219,13 +218,12 @@ namespace Tau
 	};
 #pragma region Number::Decimal
 	class Number::Decimal:
-		public Number
+	public Number
 	{
 	protected:
 		class Proxy:
 			public Number::Proxy
-		{
-		};
+		{};
 	public:
 		class Integer;
 		class Float;
@@ -237,7 +235,7 @@ namespace Tau
 #pragma endregion
 #pragma region Number::Decimal::Integer
 	class Number::Decimal::Integer:
-		public Decimal
+	public Decimal
 	{
 	public:
 		class Proxy:
@@ -248,8 +246,7 @@ namespace Tau
 		public:
 			inline Proxy(const int& value_):
 				value(value_)
-			{
-			}
+			{}
 		public:
 			inline Object operator [] (const Object& key_) const override
 			{
@@ -289,7 +286,7 @@ namespace Tau
 #pragma endregion
 #pragma region Number::Decimal::Float
 	class Number::Decimal::Float:
-		public Decimal
+	public Decimal
 	{
 	public:
 		class Proxy:
@@ -300,8 +297,7 @@ namespace Tau
 		public:
 			inline Proxy(const float& value_):
 				value(value_)
-			{
-			}
+			{}
 		public:
 			inline Object operator [] (const Object& key_) const override
 			{
@@ -341,7 +337,7 @@ namespace Tau
 #pragma endregion
 #pragma region Number::Decimal::Double
 	class Number::Decimal::Double:
-		public Decimal
+	public Decimal
 	{
 	public:
 		class Proxy:
@@ -352,8 +348,7 @@ namespace Tau
 		public:
 			inline Proxy(const double& value_):
 				value(value_)
-			{
-			}
+			{}
 		public:
 			inline Object operator [] (const Object& key_) const override
 			{
@@ -404,8 +399,7 @@ namespace Tau
 		public:
 			inline Proxy(const std::string& value_):
 				value(value_)
-			{
-			}
+			{}
 		public:
 			inline Object operator [] (const Object& key_) const override
 			{
@@ -457,12 +451,11 @@ namespace Tau
 			public Object::Proxy
 		{
 		protected:
-			bool value;
+			std::vector<Object> objects;
 		public:
-			inline Proxy(const bool& value_):
-				value(value_)
-			{
-			}
+			inline Proxy(const std::vector<Object>& objects_ = std::vector<Object>()):
+				objects(objects_)
+			{}
 		public:
 			inline Object operator [] (const Object& key_) const override
 			{
@@ -499,9 +492,12 @@ namespace Tau
 			}
 		};
 	public:
-		inline Array() = delete;
+		inline Array():
+			Object(std::static_pointer_cast<Object::Proxy>(std::make_shared<Proxy>()))
+		{
+		}
 		inline Array(const Array&) = delete;
-		inline ~Array() = delete;
+		inline ~Array() = default;
 	public:
 		inline Array& operator = (const Array&) = delete;
 	};
@@ -509,8 +505,7 @@ namespace Tau
 #pragma region Object
 	Object::Object():
 		proxy(std::make_shared<None::Proxy>())
-	{
-	}
+	{}
 	Object::Object(Object&& source_)
 	{
 		source_.proxy = nullptr;
@@ -527,30 +522,33 @@ namespace Tau
 
 	Object::Object(const nullptr_t&):
 		proxy(std::make_shared<None::Proxy>())
-	{
-	}
-	Object::Object(const bool& value_):
+	{}
+	Object::Object(const bool& value_) :
 		proxy(std::make_shared<Boolean::Proxy>(value_))
 	{
 	}
-	Object::Object(const int& value_):
+	Object::Object(const int& value_) :
 		proxy(std::make_shared<Number::Decimal::Integer::Proxy>(value_))
 	{
 	}
-	Object::Object(const float& value_):
+	Object::Object(const float& value_) :
 		proxy(std::make_shared<Number::Decimal::Float::Proxy>(value_))
 	{
 	}
-	Object::Object(const double& value_):
+	Object::Object(const double& value_) :
 		proxy(std::make_shared<Number::Decimal::Double::Proxy>(value_))
 	{
 	}
-	Object::Object(const std::string& value_):
+	Object::Object(const std::string& value_) :
 		proxy(std::make_shared<String::Proxy>(value_))
 	{
 	}
-	Object::Object(const char * const value_):
+	Object::Object(const char * const value_) :
 		proxy(std::make_shared<String::Proxy>(value_))
+	{
+	}
+	Object::Object(const std::initializer_list<Object>& value_) :
+		proxy(std::make_shared<Array::Proxy>(value_))
 	{
 	}
 
