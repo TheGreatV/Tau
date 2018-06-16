@@ -40,11 +40,15 @@ namespace Tau
 		public:
 			inline Proxy& operator = (const Proxy&) = delete;
 		public:
+			inline virtual Object operator [] (const Object& key_) const = 0;
+			inline virtual Object& operator [] (const Object& key_) = 0;
+		public:
 			inline virtual operator std::nullptr_t() const = 0;
 			inline virtual operator bool() const = 0;
 			inline virtual operator int() const = 0;
 			inline virtual operator float() const = 0;
 			inline virtual operator double() const = 0;
+			inline virtual operator std::string() const = 0;
 		};
 	protected:
 		std::shared_ptr<Proxy> proxy;
@@ -56,22 +60,38 @@ namespace Tau
 	public:
 		inline Object& operator = (const Object&) = default;
 		inline Object& operator = (Object&& source_);
+	protected:
+		inline Object(const std::shared_ptr<Proxy>& proxy_):
+			proxy(proxy_)
+		{
+		}
 	public:
 		inline Object(const std::nullptr_t&);
 		inline Object(const bool& value_);
 		inline Object(const int& value_);
 		inline Object(const float& value_);
 		inline Object(const double& value_);
-		inline Object(const std::string& value_); // TODO
+		inline Object(const std::string& value_);
+		inline Object(const char * const value_);
 		// TODO: implicit constructors
+	public:
+		inline Object operator [] (const Object& key_) const;
+		inline Object& operator [] (const Object& key_);
 	public:
 		inline operator std::nullptr_t() const;
 		inline operator bool() const;
 		inline operator int() const;
 		inline operator float() const;
 		inline operator double() const;
-		inline operator std::string() const; // TODO
+		inline operator std::string() const;
 		// TODO: cast operators
+	public:
+		template<class Derived> inline bool Is() const
+		{
+			auto derivedProxy = std::dynamic_pointer_cast<Derived::Proxy>(proxy);
+
+			return derivedProxy != nullptr;
+		}
 	};
 	class None:
 		public Object
@@ -82,31 +102,44 @@ namespace Tau
 			public Object::Proxy
 		{
 		public:
-			inline virtual operator std::nullptr_t() const override
+			inline Object operator [] (const Object& key_) const override
+			{
+				throw NotImplementedException();
+			}
+			inline Object& operator [] (const Object& key_) override
+			{
+				throw NotImplementedException();
+			}
+		public:
+			inline operator std::nullptr_t() const override
 			{
 				return nullptr;
 			}
-			inline virtual operator bool() const override
+			inline operator bool() const override
 			{
 				throw NotImplementedException(); // TODO
 			}
-			inline virtual operator int() const override
+			inline operator int() const override
 			{
 				throw NotImplementedException(); // TODO
 			}
-			inline virtual operator float() const override
+			inline operator float() const override
 			{
 				throw NotImplementedException(); // TODO
 			}
-			inline virtual operator double() const override
+			inline operator double() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline operator std::string() const override
 			{
 				throw NotImplementedException(); // TODO
 			}
 		};
 	public:
 		inline None() = delete;
-		inline None(const None&) = delete;
-		inline ~None() = delete;
+		inline None(const None&) = default;
+		inline ~None() = default;
 	public:
 		inline None& operator = (const None&) = delete;
 	};
@@ -126,6 +159,15 @@ namespace Tau
 			{
 			}
 		public:
+			inline Object operator [] (const Object& key_) const override
+			{
+				throw NotImplementedException();
+			}
+			inline Object& operator [] (const Object& key_) override
+			{
+				throw NotImplementedException();
+			}
+		public:
 			inline virtual operator std::nullptr_t() const override
 			{
 				throw NotImplementedException(); // TODO
@@ -146,6 +188,10 @@ namespace Tau
 			{
 				throw NotImplementedException(); // TODO
 			}
+			inline virtual operator std::string() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
 		};
 	public:
 		inline Boolean() = delete;
@@ -159,25 +205,43 @@ namespace Tau
 	{
 		friend Object;
 	protected:
-		class Decimal
+		class Proxy:
+			public Object::Proxy
 		{
-		public:
-			class Integer;
-			class Float;
-			class Double;
 		};
+		class Decimal;
 	public:
-		inline Number() = delete;
+		inline Number() = default;
 		inline Number(const Number&) = delete;
-		inline ~Number() = delete;
+		inline ~Number() = default;
 	public:
 		inline Number& operator = (const Number&) = delete;
 	};
-	class Number::Decimal::Integer
+#pragma region Number::Decimal
+	class Number::Decimal:
+		public Number
+	{
+	protected:
+		class Proxy:
+			public Number::Proxy
+		{
+		};
+	public:
+		class Integer;
+		class Float;
+		class Double;
+	public:
+		inline Decimal() = default;
+		inline ~Decimal() = default;
+	};
+#pragma endregion
+#pragma region Number::Decimal::Integer
+	class Number::Decimal::Integer:
+		public Decimal
 	{
 	public:
 		class Proxy:
-			public Object::Proxy
+			public Decimal::Proxy
 		{
 		protected:
 			int value;
@@ -187,6 +251,15 @@ namespace Tau
 			{
 			}
 		public:
+			inline Object operator [] (const Object& key_) const override
+			{
+				throw NotImplementedException();
+			}
+			inline Object& operator [] (const Object& key_) override
+			{
+				throw NotImplementedException();
+			}
+		public:
 			inline virtual operator std::nullptr_t() const override
 			{
 				throw NotImplementedException(); // TODO
@@ -207,13 +280,20 @@ namespace Tau
 			{
 				return static_cast<double>(value);
 			}
+			inline virtual operator std::string() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
 		};
 	};
-	class Number::Decimal::Float
+#pragma endregion
+#pragma region Number::Decimal::Float
+	class Number::Decimal::Float:
+		public Decimal
 	{
 	public:
 		class Proxy:
-			public Object::Proxy
+			public Decimal::Proxy
 		{
 		protected:
 			float value;
@@ -223,6 +303,15 @@ namespace Tau
 			{
 			}
 		public:
+			inline Object operator [] (const Object& key_) const override
+			{
+				throw NotImplementedException();
+			}
+			inline Object& operator [] (const Object& key_) override
+			{
+				throw NotImplementedException();
+			}
+		public:
 			inline virtual operator std::nullptr_t() const override
 			{
 				throw NotImplementedException(); // TODO
@@ -243,13 +332,20 @@ namespace Tau
 			{
 				return static_cast<double>(value);
 			}
+			inline virtual operator std::string() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
 		};
 	};
-	class Number::Decimal::Double
+#pragma endregion
+#pragma region Number::Decimal::Double
+	class Number::Decimal::Double:
+		public Decimal
 	{
 	public:
 		class Proxy:
-			public Object::Proxy
+			public Decimal::Proxy
 		{
 		protected:
 			double value;
@@ -257,6 +353,15 @@ namespace Tau
 			inline Proxy(const double& value_):
 				value(value_)
 			{
+			}
+		public:
+			inline Object operator [] (const Object& key_) const override
+			{
+				throw NotImplementedException();
+			}
+			inline Object& operator [] (const Object& key_) override
+			{
+				throw NotImplementedException();
 			}
 		public:
 			inline virtual operator std::nullptr_t() const override
@@ -279,7 +384,126 @@ namespace Tau
 			{
 				return value;
 			}
+			inline virtual operator std::string() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
 		};
+	};
+#pragma endregion
+	class String:
+		public Object
+	{
+		friend Object;
+	protected:
+		class Proxy:
+			public Object::Proxy
+		{
+		protected:
+			std::string value;
+		public:
+			inline Proxy(const std::string& value_):
+				value(value_)
+			{
+			}
+		public:
+			inline Object operator [] (const Object& key_) const override
+			{
+				throw NotImplementedException();
+			}
+			inline Object& operator [] (const Object& key_) override
+			{
+				throw NotImplementedException();
+			}
+		public:
+			inline virtual operator std::nullptr_t() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline virtual operator bool() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline virtual operator int() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline virtual operator float() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline virtual operator double() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline virtual operator std::string() const override
+			{
+				return value;
+			}
+		};
+	public:
+		inline String() = delete;
+		inline String(const String&) = delete;
+		inline ~String() = delete;
+	public:
+		inline String& operator = (const String&) = delete;
+	};
+	class Array:
+		public Object
+	{
+		friend Object;
+	protected:
+		class Proxy:
+			public Object::Proxy
+		{
+		protected:
+			bool value;
+		public:
+			inline Proxy(const bool& value_):
+				value(value_)
+			{
+			}
+		public:
+			inline Object operator [] (const Object& key_) const override
+			{
+				throw NotImplementedException();
+			}
+			inline Object& operator [] (const Object& key_) override
+			{
+				throw NotImplementedException();
+			}
+		public:
+			inline virtual operator std::nullptr_t() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline virtual operator bool() const override
+			{
+				throw NotImplementedException();
+			}
+			inline virtual operator int() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline virtual operator float() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline virtual operator double() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline virtual operator std::string() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+		};
+	public:
+		inline Array() = delete;
+		inline Array(const Array&) = delete;
+		inline ~Array() = delete;
+	public:
+		inline Array& operator = (const Array&) = delete;
 	};
 
 #pragma region Object
@@ -321,6 +545,23 @@ namespace Tau
 		proxy(std::make_shared<Number::Decimal::Double::Proxy>(value_))
 	{
 	}
+	Object::Object(const std::string& value_):
+		proxy(std::make_shared<String::Proxy>(value_))
+	{
+	}
+	Object::Object(const char * const value_):
+		proxy(std::make_shared<String::Proxy>(value_))
+	{
+	}
+
+	Object Object::operator [] (const Object& key_) const
+	{
+		return proxy->operator[](key_);
+	}
+	Object& Object::operator [] (const Object& key_)
+	{
+		return proxy->operator[](key_);
+	}
 
 	Object::operator std::nullptr_t() const
 	{
@@ -341,6 +582,10 @@ namespace Tau
 	Object::operator double() const
 	{
 		return proxy->operator double();
+	}
+	Object::operator std::string() const
+	{
+		return proxy->operator std::string();
 	}
 #pragma endregion
 }
