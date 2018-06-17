@@ -35,6 +35,8 @@ namespace Tau
 		class Proxy
 		{
 		public:
+			class Empty;
+		public:
 			inline Proxy() = default;
 			inline Proxy(const Proxy&) = delete;
 			inline virtual ~Proxy() = default;
@@ -50,7 +52,97 @@ namespace Tau
 			inline virtual operator float() const = 0;
 			inline virtual operator double() const = 0;
 			inline virtual operator std::string() const = 0;
+		public:
+			inline virtual std::size_t Length() const = 0;
+			inline virtual void Add(const Object& value_) = 0;
+			inline virtual void Remove(const Object& value_) = 0;
+			inline virtual void AddToFront(const Object& value_) = 0;
+			inline virtual void RemoveFromFront(const Object& value_) = 0;
+			inline virtual void AddToBack(const Object& value_) = 0;
+			inline virtual void RemoveFromBack(const Object& value_) = 0;
+			inline virtual void Insert(const std::size_t& index_, const Object& value_) = 0;
+			inline virtual void Erase(const std::size_t& index_) = 0;
 		};
+#pragma region Proxy::Empty
+		class Proxy::Empty:
+			public Proxy
+		{
+		protected:
+			inline Empty() = default;
+			inline ~Empty() = default;
+		public:
+			inline Object operator [] (const Object& key_) const override
+			{
+				throw NotImplementedException();
+			}
+			inline Object& operator [] (const Object& key_) override
+			{
+				throw NotImplementedException();
+			}
+		public:
+			inline operator std::nullptr_t() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline operator bool() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline operator int() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline operator float() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline operator double() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline operator std::string() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+		public:
+			inline std::size_t Length() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline void Add(const Object& value_) override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline void Remove(const Object& value_) override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline void AddToFront(const Object& value_) override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline void RemoveFromFront(const Object& value_) override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline void AddToBack(const Object& value_) override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline void RemoveFromBack(const Object& value_) override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline void Insert(const std::size_t& index_, const Object& value_) override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline void Erase(const std::size_t& index_) override
+			{
+				throw NotImplementedException(); // TODO
+			}
+		};
+#pragma endregion
 	protected:
 		std::shared_ptr<Proxy> proxy;
 	public:
@@ -93,6 +185,16 @@ namespace Tau
 
 			return derivedProxy != nullptr;
 		}
+	public:
+		inline std::size_t Length() const;
+		inline void Add(const Object& value_);
+		inline void Remove(const Object& value_);
+		inline void AddToFront(const Object& value_);
+		inline void RemoveFromFront(const Object& value_);
+		inline void AddToBack(const Object& value_);
+		inline void RemoveFromBack(const Object& value_);
+		inline void Insert(const std::size_t& index_, const Object& value_);
+		inline void Erase(const std::size_t& index_);
 	};
 	class None:
 		public Object
@@ -100,41 +202,12 @@ namespace Tau
 		friend Object;
 	protected:
 		class Proxy:
-			public Object::Proxy
+			public Object::Proxy::Empty
 		{
-		public:
-			inline Object operator [] (const Object& key_) const override
-			{
-				throw NotImplementedException();
-			}
-			inline Object& operator [] (const Object& key_) override
-			{
-				throw NotImplementedException();
-			}
 		public:
 			inline operator std::nullptr_t() const override
 			{
 				return nullptr;
-			}
-			inline operator bool() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline operator int() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline operator float() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline operator double() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline operator std::string() const override
-			{
-				throw NotImplementedException(); // TODO
 			}
 		};
 	public:
@@ -150,7 +223,7 @@ namespace Tau
 		friend Object;
 	protected:
 		class Proxy:
-			public Object::Proxy
+			public Object::Proxy::Empty
 		{
 		protected:
 			bool value;
@@ -159,38 +232,9 @@ namespace Tau
 				value(value_)
 			{}
 		public:
-			inline Object operator [] (const Object& key_) const override
-			{
-				throw NotImplementedException();
-			}
-			inline Object& operator [] (const Object& key_) override
-			{
-				throw NotImplementedException();
-			}
-		public:
-			inline virtual operator std::nullptr_t() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
 			inline virtual operator bool() const override
 			{
 				return value;
-			}
-			inline virtual operator int() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline virtual operator float() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline virtual operator double() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline virtual operator std::string() const override
-			{
-				throw NotImplementedException(); // TODO
 			}
 		};
 	public:
@@ -206,8 +250,9 @@ namespace Tau
 		friend Object;
 	protected:
 		class Proxy:
-			public Object::Proxy
-		{};
+			public Object::Proxy::Empty
+		{
+		};
 		class Decimal;
 	public:
 		inline Number() = default;
@@ -223,7 +268,8 @@ namespace Tau
 	protected:
 		class Proxy:
 			public Number::Proxy
-		{};
+		{
+		};
 	public:
 		class Integer;
 		class Float;
@@ -248,23 +294,6 @@ namespace Tau
 				value(value_)
 			{}
 		public:
-			inline Object operator [] (const Object& key_) const override
-			{
-				throw NotImplementedException();
-			}
-			inline Object& operator [] (const Object& key_) override
-			{
-				throw NotImplementedException();
-			}
-		public:
-			inline virtual operator std::nullptr_t() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline virtual operator bool() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
 			inline virtual operator int() const
 			{
 				return value;
@@ -276,10 +305,6 @@ namespace Tau
 			inline virtual operator double() const
 			{
 				return static_cast<double>(value);
-			}
-			inline virtual operator std::string() const override
-			{
-				throw NotImplementedException(); // TODO
 			}
 		};
 	};
@@ -392,7 +417,7 @@ namespace Tau
 		friend Object;
 	protected:
 		class Proxy:
-			public Object::Proxy
+			public Object::Proxy::Empty
 		{
 		protected:
 			std::string value;
@@ -403,36 +428,53 @@ namespace Tau
 		public:
 			inline Object operator [] (const Object& key_) const override
 			{
-				throw NotImplementedException();
+				if (!key_.Is<Number>())
+				{
+					throw NotImplementedException(); // TODO
+				}
+
+				auto index = static_cast<int>(key_);
+
+				if (index < 0)
+				{
+					throw NotImplementedException(); // TODO
+				}
+				if (index >= static_cast<int>(value.size()))
+				{
+					throw NotImplementedException(); // TODO
+				}
+
+				return Object(std::to_string(value[index]));
 			}
-			inline Object& operator [] (const Object& key_) override
+			/*inline Object& operator [] (const Object& key_) override
 			{
-				throw NotImplementedException();
-			}
+				if (!key_.Is<Number>())
+				{
+					throw NotImplementedException(); // TODO
+				}
+
+				auto index = static_cast<int>(key_);
+
+				if (index < 0)
+				{
+					throw NotImplementedException(); // TODO
+				}
+				if (index >= static_cast<int>(value.size()))
+				{
+					throw NotImplementedException(); // TODO
+				}
+
+				return Object(std::to_string(value[index])); // returning address of local variable
+			}*/
 		public:
-			inline virtual operator std::nullptr_t() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline virtual operator bool() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline virtual operator int() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline virtual operator float() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline virtual operator double() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
 			inline virtual operator std::string() const override
 			{
 				return value;
+			}
+		public:
+			inline std::size_t Length() const override
+			{
+				return value.size();
 			}
 		};
 	public:
@@ -448,7 +490,7 @@ namespace Tau
 		friend Object;
 	protected:
 		class Proxy:
-			public Object::Proxy
+			public Object::Proxy::Empty
 		{
 		protected:
 			std::vector<Object> objects;
@@ -456,39 +498,95 @@ namespace Tau
 			inline Proxy(const std::vector<Object>& objects_ = std::vector<Object>()):
 				objects(objects_)
 			{}
+		private:
+			std::vector<Object>::const_iterator ObtainIteratorFromIndex(const std::size_t& index_) const
+			{
+				auto it = objects.begin();
+
+				for (std::size_t i = 0; i < index_; ++i)
+				{
+					++it;
+				}
+
+				return it;
+			}
 		public:
 			inline Object operator [] (const Object& key_) const override
 			{
-				throw NotImplementedException();
+				if (!key_.Is<Number>())
+				{
+					throw NotImplementedException(); // TODO
+				}
+
+				auto index = static_cast<int>(key_);
+
+				if (index < 0)
+				{
+					throw NotImplementedException(); // TODO
+				}
+				if (index >= static_cast<int>(objects.size()))
+				{
+					throw NotImplementedException(); // TODO
+				}
+
+				return objects[index];
 			}
 			inline Object& operator [] (const Object& key_) override
 			{
-				throw NotImplementedException();
+				if (!key_.Is<Number>())
+				{
+					throw NotImplementedException(); // TODO
+				}
+
+				auto index = static_cast<int>(key_);
+
+				if (index < 0)
+				{
+					throw NotImplementedException(); // TODO
+				}
+				if (index >= static_cast<int>(objects.size()))
+				{
+					throw NotImplementedException(); // TODO
+				}
+
+				return objects[index];
 			}
 		public:
-			inline virtual operator std::nullptr_t() const override
+			inline std::size_t Length() const override
 			{
-				throw NotImplementedException(); // TODO
+				return objects.size();
 			}
-			inline virtual operator bool() const override
+			inline void AddToFront(const Object& value_) override
 			{
-				throw NotImplementedException();
+				objects.insert(objects.begin(), value_);
 			}
-			inline virtual operator int() const override
+			inline void RemoveFromFront(const Object& value_) override
 			{
-				throw NotImplementedException(); // TODO
+				objects.erase(objects.begin());
 			}
-			inline virtual operator float() const override
+			inline void AddToBack(const Object& value_) override
 			{
-				throw NotImplementedException(); // TODO
+				objects.push_back(value_);
 			}
-			inline virtual operator double() const override
+			inline void RemoveFromBack(const Object& value_) override
 			{
-				throw NotImplementedException(); // TODO
+				objects.pop_back();
 			}
-			inline virtual operator std::string() const override
+			inline void Add(const Object& value_) override
 			{
-				throw NotImplementedException(); // TODO
+				AddToBack(value_);
+			}
+			inline void Remove(const Object& value_) override
+			{
+				RemoveFromBack(value_);
+			}
+			inline void Insert(const std::size_t& index_, const Object& value_) override
+			{
+				objects.insert(ObtainIteratorFromIndex(index_), value_);
+			}
+			inline void Erase(const std::size_t& index_) override
+			{
+				objects.erase(ObtainIteratorFromIndex(index_));
 			}
 		};
 	public:
@@ -584,6 +682,43 @@ namespace Tau
 	Object::operator std::string() const
 	{
 		return proxy->operator std::string();
+	}
+
+	std::size_t Object::Length() const
+	{
+		return proxy->Length();
+	}
+	void Object::Add(const Object& value_)
+	{
+		proxy->Add(value_);
+	}
+	void Object::Remove(const Object& value_)
+	{
+		proxy->Remove(value_);
+	}
+	void Object::AddToFront(const Object& value_)
+	{
+		proxy->AddToFront(value_);
+	}
+	void Object::RemoveFromFront(const Object& value_)
+	{
+		proxy->RemoveFromFront(value_);
+	}
+	void Object::AddToBack(const Object& value_)
+	{
+		proxy->AddToBack(value_);
+	}
+	void Object::RemoveFromBack(const Object& value_)
+	{
+		proxy->RemoveFromBack(value_);
+	}
+	void Object::Insert(const std::size_t& index_, const Object& value_)
+	{
+		proxy->Insert(index_, value_);
+	}
+	void Object::Erase(const std::size_t& index_)
+	{
+		proxy->Erase(index_);
 	}
 #pragma endregion
 }
