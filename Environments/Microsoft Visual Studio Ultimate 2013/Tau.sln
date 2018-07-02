@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Others", "Others", "{B4E3E295-E231-4ED3-8343-82BADB1CA00C}"
 EndProject
@@ -13,6 +13,12 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{14D28B9A-C10D-42A9-B3B9-B35ABA587E59}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tau", "Projects\Libraries\Tau\Tau.vcxproj", "{A75267CB-0AF5-4687-9F1C-2A12398E33B4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{BBB24A84-8F88-473A-86B8-15BBB56547B8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{B1243E84-420D-450C-896C-026EBEDDF4C8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tau", "Projects\Testing\Libraries\Tau\Tau.vcxproj", "{50882254-CAB3-4342-8D40-CFF3811BED6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,6 +34,10 @@ Global
 		{A75267CB-0AF5-4687-9F1C-2A12398E33B4}.Debug|Win32.Build.0 = Debug|Win32
 		{A75267CB-0AF5-4687-9F1C-2A12398E33B4}.Release|Win32.ActiveCfg = Release|Win32
 		{A75267CB-0AF5-4687-9F1C-2A12398E33B4}.Release|Win32.Build.0 = Release|Win32
+		{50882254-CAB3-4342-8D40-CFF3811BED6C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{50882254-CAB3-4342-8D40-CFF3811BED6C}.Debug|Win32.Build.0 = Debug|Win32
+		{50882254-CAB3-4342-8D40-CFF3811BED6C}.Release|Win32.ActiveCfg = Release|Win32
+		{50882254-CAB3-4342-8D40-CFF3811BED6C}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -35,5 +45,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{6DD8B7CA-2924-474F-BCB5-A50979C14F5F} = {B4E3E295-E231-4ED3-8343-82BADB1CA00C}
 		{A75267CB-0AF5-4687-9F1C-2A12398E33B4} = {14D28B9A-C10D-42A9-B3B9-B35ABA587E59}
+		{B1243E84-420D-450C-896C-026EBEDDF4C8} = {BBB24A84-8F88-473A-86B8-15BBB56547B8}
+		{50882254-CAB3-4342-8D40-CFF3811BED6C} = {B1243E84-420D-450C-896C-026EBEDDF4C8}
 	EndGlobalSection
 EndGlobal

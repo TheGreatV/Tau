@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <regex>
 
 
 namespace Tau
@@ -11,7 +12,22 @@ namespace Tau
 	class Boolean;
 	class Number;
 
+	enum class Type
+	{
+		None,
+		Boolean,
+		Number,
+		String,
+		Array,
+		Map,
+	};
+
 	class Exception
+	{
+		// TODO
+	};
+	class NotImplementedException:
+		public Exception
 	{
 		// TODO
 	};
@@ -20,17 +36,6 @@ namespace Tau
 	{
 		friend Boolean;
 		friend Number;
-	protected:
-		class Exception:
-			public Tau::Exception
-		{
-			// TODO
-		};
-		class NotImplementedException:
-			public Exception
-		{
-			// TODO
-		};
 	protected:
 		class Proxy
 		{
@@ -46,6 +51,8 @@ namespace Tau
 			inline virtual Object operator [] (const Object& key_) const = 0;
 			inline virtual Object& operator [] (const Object& key_) = 0;
 		public:
+			inline virtual bool operator == (const std::shared_ptr<Proxy>& source_) const = 0;
+		public:
 			inline virtual operator std::nullptr_t() const = 0;
 			inline virtual operator bool() const = 0;
 			inline virtual operator int() const = 0;
@@ -53,6 +60,7 @@ namespace Tau
 			inline virtual operator double() const = 0;
 			inline virtual operator std::string() const = 0;
 		public:
+			inline virtual Type Type() const = 0;
 			inline virtual std::size_t Length() const = 0;
 			inline virtual void Add(const Object& value_) = 0;
 			inline virtual void Remove(const Object& value_) = 0;
@@ -62,6 +70,7 @@ namespace Tau
 			inline virtual void RemoveFromBack(const Object& value_) = 0;
 			inline virtual void Insert(const std::size_t& index_, const Object& value_) = 0;
 			inline virtual void Erase(const std::size_t& index_) = 0;
+			inline virtual std::vector<Object> Values() const = 0;
 		};
 #pragma region Proxy::Empty
 		class Proxy::Empty:
@@ -78,6 +87,11 @@ namespace Tau
 			inline Object& operator [] (const Object& key_) override
 			{
 				throw NotImplementedException();
+			}
+		public:
+			inline bool operator == (const std::shared_ptr<Proxy>& source_) const override
+			{
+				throw NotImplementedException(); // TODO
 			}
 		public:
 			inline operator std::nullptr_t() const override
@@ -105,6 +119,10 @@ namespace Tau
 				throw NotImplementedException(); // TODO
 			}
 		public:
+			inline virtual Tau::Type Type() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
 			inline std::size_t Length() const override
 			{
 				throw NotImplementedException(); // TODO
@@ -141,8 +159,13 @@ namespace Tau
 			{
 				throw NotImplementedException(); // TODO
 			}
+			inline std::vector<Object> Values() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
 		};
 #pragma endregion
+		friend Proxy;
 	protected:
 		std::shared_ptr<Proxy> proxy;
 	public:
@@ -156,7 +179,8 @@ namespace Tau
 	protected:
 		inline Object(const std::shared_ptr<Proxy>& proxy_):
 			proxy(proxy_)
-		{}
+		{
+		}
 	public:
 		inline Object(const std::nullptr_t&);
 		inline Object(const bool& value_);
@@ -170,6 +194,15 @@ namespace Tau
 	public:
 		inline Object operator [] (const Object& key_) const;
 		inline Object& operator [] (const Object& key_);
+	public:
+		inline bool operator == (const Object& source_) const
+		{
+			return proxy->operator == (source_.proxy);
+		}
+		inline bool operator != (const Object& source_) const
+		{
+			return !operator==(source_);
+		}
 	public:
 		inline operator std::nullptr_t() const;
 		inline operator bool() const;
@@ -186,6 +219,7 @@ namespace Tau
 			return derivedProxy != nullptr;
 		}
 	public:
+		inline Type Type() const;
 		inline std::size_t Length() const;
 		inline void Add(const Object& value_);
 		inline void Remove(const Object& value_);
@@ -195,6 +229,7 @@ namespace Tau
 		inline void RemoveFromBack(const Object& value_);
 		inline void Insert(const std::size_t& index_, const Object& value_);
 		inline void Erase(const std::size_t& index_);
+		inline std::vector<Object> Values() const;
 	};
 	class None:
 		public Object
@@ -205,6 +240,19 @@ namespace Tau
 			public Object::Proxy::Empty
 		{
 		public:
+			// inline bool operator == (const Object& source_) const override
+			// {
+			// 	return source_.Is<None>();
+			// }
+			inline bool operator == (const std::shared_ptr<Object::Proxy>& source_) const override
+			{
+				return std::dynamic_pointer_cast<Proxy>(source_) != nullptr;
+			}
+		public:
+			inline Tau::Type Type() const override
+			{
+				return Type::None;
+			}
 			inline operator std::nullptr_t() const override
 			{
 				return nullptr;
@@ -230,11 +278,22 @@ namespace Tau
 		public:
 			inline Proxy(const bool& value_):
 				value(value_)
-			{}
+			{
+			}
+		public:
+			inline bool operator == (const std::shared_ptr<Object::Proxy>& source_) const override
+			{
+				return (std::dynamic_pointer_cast<Proxy>(source_) != nullptr) && (source_->operator bool() == value);
+			}
 		public:
 			inline virtual operator bool() const override
 			{
 				return value;
+			}
+		public:
+			inline Tau::Type Type() const override
+			{
+				return Type::Boolean;
 			}
 		};
 	public:
@@ -248,12 +307,18 @@ namespace Tau
 		public Object
 	{
 		friend Object;
+	public:
+		class Decimal;
 	protected:
 		class Proxy:
 			public Object::Proxy::Empty
 		{
+		public:
+			inline Tau::Type Type() const override
+			{
+				return Type::Number;
+			}
 		};
-		class Decimal;
 	public:
 		inline Number() = default;
 		inline Number(const Number&) = delete;
@@ -281,7 +346,7 @@ namespace Tau
 #pragma endregion
 #pragma region Number::Decimal::Integer
 	class Number::Decimal::Integer:
-	public Decimal
+		public Decimal
 	{
 	public:
 		class Proxy:
@@ -293,6 +358,8 @@ namespace Tau
 			inline Proxy(const int& value_):
 				value(value_)
 			{}
+		public:
+			inline bool operator == (const std::shared_ptr<Object::Proxy>& source_) const override;
 		public:
 			inline virtual operator int() const
 			{
@@ -322,25 +389,11 @@ namespace Tau
 		public:
 			inline Proxy(const float& value_):
 				value(value_)
-			{}
-		public:
-			inline Object operator [] (const Object& key_) const override
 			{
-				throw NotImplementedException();
-			}
-			inline Object& operator [] (const Object& key_) override
-			{
-				throw NotImplementedException();
 			}
 		public:
-			inline virtual operator std::nullptr_t() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline virtual operator bool() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
+			inline bool operator == (const std::shared_ptr<Object::Proxy>& source_) const override;
+		public:
 			inline virtual operator int() const
 			{
 				return static_cast<int>(value);
@@ -352,10 +405,6 @@ namespace Tau
 			inline virtual operator double() const
 			{
 				return static_cast<double>(value);
-			}
-			inline virtual operator std::string() const override
-			{
-				throw NotImplementedException(); // TODO
 			}
 		};
 	};
@@ -375,23 +424,8 @@ namespace Tau
 				value(value_)
 			{}
 		public:
-			inline Object operator [] (const Object& key_) const override
-			{
-				throw NotImplementedException();
-			}
-			inline Object& operator [] (const Object& key_) override
-			{
-				throw NotImplementedException();
-			}
+			inline bool operator == (const std::shared_ptr<Object::Proxy>& source_) const override;
 		public:
-			inline virtual operator std::nullptr_t() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
-			inline virtual operator bool() const override
-			{
-				throw NotImplementedException(); // TODO
-			}
 			inline virtual operator int() const
 			{
 				return static_cast<int>(value);
@@ -403,10 +437,6 @@ namespace Tau
 			inline virtual operator double() const
 			{
 				return value;
-			}
-			inline virtual operator std::string() const override
-			{
-				throw NotImplementedException(); // TODO
 			}
 		};
 	};
@@ -446,32 +476,21 @@ namespace Tau
 
 				return Object(std::to_string(value[index]));
 			}
-			/*inline Object& operator [] (const Object& key_) override
+		public:
+			inline bool operator == (const std::shared_ptr<Object::Proxy>& source_) const override
 			{
-				if (!key_.Is<Number>())
-				{
-					throw NotImplementedException(); // TODO
-				}
-
-				auto index = static_cast<int>(key_);
-
-				if (index < 0)
-				{
-					throw NotImplementedException(); // TODO
-				}
-				if (index >= static_cast<int>(value.size()))
-				{
-					throw NotImplementedException(); // TODO
-				}
-
-				return Object(std::to_string(value[index])); // returning address of local variable
-			}*/
+				return (std::dynamic_pointer_cast<Proxy>(source_) != nullptr) && (source_->operator std::string() == value);
+			}
 		public:
 			inline virtual operator std::string() const override
 			{
 				return value;
 			}
 		public:
+			inline Tau::Type Type() const override
+			{
+				return Type::String;
+			}
 			inline std::size_t Length() const override
 			{
 				return value.size();
@@ -495,9 +514,11 @@ namespace Tau
 		protected:
 			std::vector<Object> objects;
 		public:
-			inline Proxy(const std::vector<Object>& objects_ = std::vector<Object>()):
-				objects(objects_)
-			{}
+			inline Proxy(std::vector<Object>&& objects_ = std::vector<Object>()):
+				objects(std::move(objects_))
+			{
+			}
+			inline ~Proxy() override = default;
 		private:
 			std::vector<Object>::const_iterator ObtainIteratorFromIndex(const std::size_t& index_) const
 			{
@@ -552,6 +573,41 @@ namespace Tau
 				return objects[index];
 			}
 		public:
+			inline bool operator == (const std::shared_ptr<Object::Proxy>& source_) const override
+			{
+				// happy pass
+				if (source_.get() == this)
+				{
+					return true;
+				}
+				
+				if (std::dynamic_pointer_cast<Proxy>(source_) == nullptr)
+				{
+					return false;
+				}
+				
+				const auto length = Length();
+				
+				if (source_->Length() != length)
+				{
+					return false;
+				}
+				
+				for (int i = 0; i < static_cast<int>(length); ++i)
+				{
+					if (this->operator[](i) != source_->operator[](i))
+					{
+						return false;
+					}
+				}
+				
+				return true;
+			}
+		public:
+			inline Tau::Type Type() const override
+			{
+				return Type::Array;
+			}
 			inline std::size_t Length() const override
 			{
 				return objects.size();
@@ -588,10 +644,18 @@ namespace Tau
 			{
 				objects.erase(ObtainIteratorFromIndex(index_));
 			}
+			inline std::vector<Object> Values() const override
+			{
+				return objects;
+			}
 		};
 	public:
 		inline Array():
 			Object(std::static_pointer_cast<Object::Proxy>(std::make_shared<Proxy>()))
+		{
+		}
+		inline Array(std::vector<Object>&& objects_):
+			Object(std::static_pointer_cast<Object::Proxy>(std::make_shared<Proxy>(std::move(objects_))))
 		{
 		}
 		inline Array(const Array&) = delete;
@@ -604,7 +668,8 @@ namespace Tau
 	Object::Object():
 		proxy(std::make_shared<None::Proxy>())
 	{}
-	Object::Object(Object&& source_)
+	Object::Object(Object&& source_):
+		proxy(source_.proxy)
 	{
 		source_.proxy = nullptr;
 	}
@@ -684,6 +749,10 @@ namespace Tau
 		return proxy->operator std::string();
 	}
 
+	Type Object::Type() const
+	{
+		return proxy->Type();
+	}
 	std::size_t Object::Length() const
 	{
 		return proxy->Length();
@@ -720,5 +789,119 @@ namespace Tau
 	{
 		proxy->Erase(index_);
 	}
+	std::vector<Object> Object::Values() const
+	{
+		return proxy->Values();
+	}
 #pragma endregion
+	bool Number::Decimal::Integer::Proxy::operator == (const std::shared_ptr<Object::Proxy>& source_) const
+	{
+		return
+			((std::dynamic_pointer_cast<Integer::Proxy>(source_) != nullptr) && (source_->operator int() == static_cast<int>(value))) ||
+			((std::dynamic_pointer_cast<Float::Proxy>(source_) != nullptr) && (source_->operator float() == static_cast<float>(value))) ||
+			((std::dynamic_pointer_cast<Double::Proxy>(source_) != nullptr) && (source_->operator double() == static_cast<double>(value)));
+	}
+	bool Number::Decimal::Float::Proxy::operator == (const std::shared_ptr<Object::Proxy>& source_) const
+	{
+		return
+			((std::dynamic_pointer_cast<Integer::Proxy>(source_) != nullptr) && (source_->operator int() == static_cast<int>(value))) ||
+			((std::dynamic_pointer_cast<Float::Proxy>(source_) != nullptr) && (source_->operator float() == static_cast<float>(value))) ||
+			((std::dynamic_pointer_cast<Double::Proxy>(source_) != nullptr) && (source_->operator double() == static_cast<double>(value)));
+	}
+	bool Number::Decimal::Double::Proxy::operator == (const std::shared_ptr<Object::Proxy>& source_) const
+	{
+		return
+			((std::dynamic_pointer_cast<Integer::Proxy>(source_) != nullptr) && (source_->operator int() == static_cast<int>(value))) ||
+			((std::dynamic_pointer_cast<Float::Proxy>(source_) != nullptr) && (source_->operator float() == static_cast<float>(value))) ||
+			((std::dynamic_pointer_cast<Double::Proxy>(source_) != nullptr) && (source_->operator double() == static_cast<double>(value)));
+	}
+
+	class Stringifier
+	{
+	protected:
+		inline std::string Screen(const std::string& value_) const
+		{
+			const auto &withoutDoubleQuotes	= std::regex_replace(value_, std::regex("\""), "\\\"");
+			const auto &withoutNewlines		= std::regex_replace(withoutDoubleQuotes, std::regex("\n"), "\\n");
+			const auto &withoutNewlinesR	= std::regex_replace(withoutNewlines, std::regex("\r"), "\\r");
+			const auto &withoutTabulation	= std::regex_replace(withoutNewlinesR, std::regex("\t"), "\\t");
+
+			return std::move(withoutTabulation);
+		}
+		inline std::string Tab(const std::size_t level_) const
+		{
+			std::string result;
+
+			for (std::size_t i = 0; i < level_; ++i)
+			{
+				result += "\t";
+			}
+
+			return result;
+		}
+		inline std::string Stringify(const Object& object_, const std::size_t level_) const
+		{
+			// TODO: visitor
+			if (object_.Type() == Type::None)
+			{
+				return "none";
+			}
+			else if (object_.Type() == Type::Boolean)
+			{
+				const auto &value = static_cast<bool>(object_);
+
+				return value
+					? "true"
+					: "false";
+			}
+			else if (object_.Is<Number::Decimal::Integer>())
+			{
+				const auto &value = static_cast<int>(object_);
+
+				return std::to_string(value);
+			}
+			else if (object_.Is<Number::Decimal::Float>())
+			{
+				const auto &value = static_cast<float>(object_);
+
+				return std::to_string(value);
+			}
+			else if (object_.Is<Number::Decimal::Double>())
+			{
+				const auto &value = static_cast<double>(object_);
+
+				return std::to_string(value);
+			}
+			else if (object_.Is<String>())
+			{
+				const auto &value		= static_cast<std::string>(object_);
+				const auto &screened	= Screen(value);
+
+				return "\"" + screened + "\"";
+			}
+			else if (object_.Is<Array>())
+			{
+				const auto &values		= object_.Values();
+				const auto &nextLevel	= level_ + 1;
+
+				std::string stringifiedValues = "";
+
+				for (const auto &value : values)
+				{
+					const auto &stringifiedValue = Stringify(value, nextLevel);
+
+					stringifiedValues += Tab(nextLevel) + stringifiedValue + ",\n";
+				}
+
+				return "[\n" + stringifiedValues + Tab(level_) + "]";
+			}
+
+			throw NotImplementedException();
+		}
+	public:
+		inline std::string Stringify(const Object& object_) const
+		{
+			return Stringify(object_, 0);
+		}
+	};
 }
