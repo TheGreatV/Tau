@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <regex>
 
 
@@ -62,6 +63,7 @@ namespace Tau
 		public:
 			inline virtual Type Type() const = 0;
 			inline virtual std::size_t Length() const = 0;
+			inline virtual bool Has(const Object& value_) const = 0;
 			inline virtual void Add(const Object& value_) = 0;
 			inline virtual void Remove(const Object& value_) = 0;
 			inline virtual void AddToFront(const Object& value_) = 0;
@@ -70,7 +72,8 @@ namespace Tau
 			inline virtual void RemoveFromBack(const Object& value_) = 0;
 			inline virtual void Insert(const std::size_t& index_, const Object& value_) = 0;
 			inline virtual void Erase(const std::size_t& index_) = 0;
-			inline virtual std::vector<Object> Values() const = 0;
+			inline virtual Object Keys() const = 0; // TODO: return Array?
+			inline virtual Object Values() const = 0; // TODO: return Array?
 		};
 #pragma region Proxy::Empty
 		class Proxy::Empty:
@@ -127,6 +130,10 @@ namespace Tau
 			{
 				throw NotImplementedException(); // TODO
 			}
+			inline bool Has(const Object& value_) const override
+			{
+				throw NotImplementedException(); // TODO
+			}
 			inline void Add(const Object& value_) override
 			{
 				throw NotImplementedException(); // TODO
@@ -159,13 +166,36 @@ namespace Tau
 			{
 				throw NotImplementedException(); // TODO
 			}
-			inline std::vector<Object> Values() const override
+			inline Object Keys() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline Object Values() const override
 			{
 				throw NotImplementedException(); // TODO
 			}
 		};
 #pragma endregion
 		friend Proxy;
+	public:
+		class Comparator
+		{
+		public:
+			inline bool operator () (const Object& left_, const Object& right_) const
+			{
+				return left_ != right_ && left_.proxy.get() < right_.proxy.get();
+			}
+		};
+		friend Comparator;
+		class Hash
+		{
+		public:
+			inline std::size_t operator () (const Object& key_) const
+			{
+				return reinterpret_cast<std::size_t>(key_.proxy.get());
+			}
+		};
+		friend Hash;
 	protected:
 		std::shared_ptr<Proxy> proxy;
 	public:
@@ -194,6 +224,14 @@ namespace Tau
 	public:
 		inline Object operator [] (const Object& key_) const;
 		inline Object& operator [] (const Object& key_);
+		inline Object operator [] (const char*const key_) const
+		{
+			return operator[](std::string(key_));
+		}
+		inline Object& operator [] (const char*const key_)
+		{
+			return operator[](std::string(key_));
+		}
 	public:
 		inline bool operator == (const Object& source_) const
 		{
@@ -221,6 +259,7 @@ namespace Tau
 	public:
 		inline Type Type() const;
 		inline std::size_t Length() const;
+		inline bool Has(const Object& value_) const;
 		inline void Add(const Object& value_);
 		inline void Remove(const Object& value_);
 		inline void AddToFront(const Object& value_);
@@ -229,7 +268,8 @@ namespace Tau
 		inline void RemoveFromBack(const Object& value_);
 		inline void Insert(const std::size_t& index_, const Object& value_);
 		inline void Erase(const std::size_t& index_);
-		inline std::vector<Object> Values() const;
+		inline Object Keys() const;
+		inline Object Values() const;
 	};
 	class None:
 		public Object
@@ -514,7 +554,7 @@ namespace Tau
 		protected:
 			std::vector<Object> objects;
 		public:
-			inline Proxy(std::vector<Object>&& objects_ = std::vector<Object>()):
+			inline Proxy(const std::vector<Object>& objects_ = std::vector<Object>()):
 				objects(std::move(objects_))
 			{
 			}
@@ -644,9 +684,9 @@ namespace Tau
 			{
 				objects.erase(ObtainIteratorFromIndex(index_));
 			}
-			inline std::vector<Object> Values() const override
+			inline Object Values() const override
 			{
-				return objects;
+				return Array(objects);
 			}
 		};
 	public:
@@ -654,14 +694,164 @@ namespace Tau
 			Object(std::static_pointer_cast<Object::Proxy>(std::make_shared<Proxy>()))
 		{
 		}
-		inline Array(std::vector<Object>&& objects_):
-			Object(std::static_pointer_cast<Object::Proxy>(std::make_shared<Proxy>(std::move(objects_))))
+		inline Array(const std::vector<Object>& objects_):
+			Object(std::static_pointer_cast<Object::Proxy>(std::make_shared<Proxy>(objects_)))
 		{
 		}
 		inline Array(const Array&) = delete;
 		inline ~Array() = default;
 	public:
 		inline Array& operator = (const Array&) = delete;
+	};
+	class Map:
+		public Object
+	{
+		friend Object;
+	public:
+		using Pair = std::pair<Object, Object>;
+		using Collection = std::unordered_map<Object, Object, Object::Hash>; // std::map<Object, Object, Object::Comparator>;
+		using Initializer = std::vector<Pair>;
+	protected:
+		class Proxy:
+			public Object::Proxy::Empty
+		{
+		protected:
+			inline static Collection ObtainObjects(Initializer&& objects_)
+			{
+				Collection objects;
+
+				for (auto &pair : objects_)
+				{
+					const auto it = objects.find(pair.first);
+
+					if (it != objects.end())
+					{
+						throw NotImplementedException(); // TODO
+					}
+
+					objects.insert(pair);
+				}
+
+				return std::move(objects);
+			}
+		protected:
+			Collection objects;
+		public:
+			inline Proxy(Initializer&& objects_ = Initializer()):
+				objects(ObtainObjects(std::move(objects_)))
+			{
+			}
+			inline ~Proxy() override = default;
+		public:
+			inline Object operator [] (const Object& key_) const override
+			{
+				const auto it = objects.find(key_);
+
+				if (it == objects.end())
+				{
+					return nullptr;
+				}
+
+				const auto value = (*it).second;
+
+				return value;
+			}
+			inline Object& operator [] (const Object& key_) override
+			{
+				return objects[key_];
+			}
+		public:
+			inline bool operator == (const std::shared_ptr<Object::Proxy>& source_) const override
+			{
+				// happy pass
+				if (source_.get() == this)
+				{
+					return true;
+				}
+				
+				if (std::dynamic_pointer_cast<Proxy>(source_) == nullptr)
+				{
+					return false;
+				}
+				
+				const auto keys = Keys();
+				
+				if (keys.Length() != source_->Keys().Length())
+				{
+					return false;
+				}
+
+				for (int i = 0; i < static_cast<int>(keys.Length()); ++i)
+				{
+					const auto &key = keys[i];
+
+					if (!source_->Has(key))
+					{
+						return false;
+					}
+					if (this->operator [](key) != source_->operator[](key))
+					{
+						return false;
+					}
+				}
+				
+				return true;
+			}
+		public:
+			inline Tau::Type Type() const override
+			{
+				return Type::Map;
+			}
+			inline std::size_t Length() const override
+			{
+				return objects.size();
+			}
+			inline bool Has(const Object& value_) const override
+			{
+				const auto it = objects.find(value_);
+
+				return it != objects.end();
+			}
+			inline Object Keys() const override
+			{
+				std::vector<Object> values;
+
+				values.reserve(objects.size());
+
+				for (const auto &pair : objects)
+				{
+					values.push_back(pair.first);
+				}
+
+				return Array(std::move(values));
+			}
+			inline Object Values() const override
+			{
+				std::vector<Object> values;
+
+				values.reserve(objects.size());
+
+				for (const auto &pair : objects)
+				{
+					values.push_back(pair.second);
+				}
+
+				return Array(std::move(values));
+			}
+		};
+	public:
+		inline Map():
+			Object(std::static_pointer_cast<Object::Proxy>(std::make_shared<Proxy>()))
+		{
+		}
+		inline Map(Initializer&& objects_) :
+			Object(std::static_pointer_cast<Object::Proxy>(std::make_shared<Proxy>(std::move(objects_))))
+		{
+		}
+		inline Map(const Map&) = delete;
+		inline ~Map() = default;
+	public:
+		inline Map& operator = (const Map&) = delete;
 	};
 
 #pragma region Object
@@ -757,6 +947,10 @@ namespace Tau
 	{
 		return proxy->Length();
 	}
+	bool Object::Has(const Object& value_) const
+	{
+		return proxy->Has(value_);
+	}
 	void Object::Add(const Object& value_)
 	{
 		proxy->Add(value_);
@@ -789,11 +983,16 @@ namespace Tau
 	{
 		proxy->Erase(index_);
 	}
-	std::vector<Object> Object::Values() const
+	Object Object::Keys() const
+	{
+		return proxy->Keys();
+	}
+	Object Object::Values() const
 	{
 		return proxy->Values();
 	}
 #pragma endregion
+#pragma region Array
 	bool Number::Decimal::Integer::Proxy::operator == (const std::shared_ptr<Object::Proxy>& source_) const
 	{
 		return
@@ -814,6 +1013,12 @@ namespace Tau
 			((std::dynamic_pointer_cast<Integer::Proxy>(source_) != nullptr) && (source_->operator int() == static_cast<int>(value))) ||
 			((std::dynamic_pointer_cast<Float::Proxy>(source_) != nullptr) && (source_->operator float() == static_cast<float>(value))) ||
 			((std::dynamic_pointer_cast<Double::Proxy>(source_) != nullptr) && (source_->operator double() == static_cast<double>(value)));
+	}
+#pragma endregion
+
+	Map::Pair Pair(const Object& key_, const Object& value_)
+	{
+		return std::make_pair(key_, value_);
 	}
 
 	class Stringifier
@@ -881,19 +1086,39 @@ namespace Tau
 			}
 			else if (object_.Is<Array>())
 			{
-				const auto &values		= object_.Values();
-				const auto &nextLevel	= level_ + 1;
+				const auto values		= object_.Values();
+				const auto nextLevel	= level_ + 1;
 
 				std::string stringifiedValues = "";
 
-				for (const auto &value : values)
+				for (int i = 0; i < static_cast<int>(values.Length()); ++i)
 				{
-					const auto &stringifiedValue = Stringify(value, nextLevel);
+					const auto value			= values[i];
+					const auto stringifiedValue	= Stringify(value, nextLevel);
 
 					stringifiedValues += Tab(nextLevel) + stringifiedValue + ",\n";
 				}
 
 				return "[\n" + stringifiedValues + Tab(level_) + "]";
+			}
+			else if (object_.Is<Map>())
+			{
+				const auto keys = object_.Keys();
+				const auto nextLevel = level_ + 1;
+
+				std::string stringifiedValues = "";
+
+				for (int i = 0; i < static_cast<int>(keys.Length()); ++i)
+				{
+					const auto key = keys[i];
+					const auto value = object_[key];
+					const auto stringifiedKey = Stringify(key, nextLevel);
+					const auto stringifiedValue = Stringify(value, nextLevel);
+
+					stringifiedValues += Tab(nextLevel) + stringifiedKey + ": " + stringifiedValue + ",\n";
+				}
+
+				return "{\n" + stringifiedValues + Tab(level_) + "}";
 			}
 
 			throw NotImplementedException();
@@ -905,3 +1130,7 @@ namespace Tau
 		}
 	};
 }
+
+
+#pragma region
+#pragma endregion
