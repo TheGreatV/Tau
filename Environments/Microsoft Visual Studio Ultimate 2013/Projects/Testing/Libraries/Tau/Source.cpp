@@ -46,5 +46,23 @@ namespace Testing
 				}
 			};
 		}
+		namespace Parser
+		{
+			TEST_CLASS(Smoke)
+			{
+			protected:
+				SUT::Object Parse(const std::string& input_)
+				{
+					return SUT::Parser().Parse("none");
+				}
+			public:
+				TEST_METHOD(None)
+				{
+					auto object = Parse("none");
+
+					Assert::IsTrue(object == SUT::Object(nullptr));
+				}
+			};
+		}
 	}
 }

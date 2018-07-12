@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -21,6 +22,7 @@ namespace Tau
 		String,
 		Array,
 		Map,
+		Data,
 	};
 
 	class Exception
@@ -67,13 +69,15 @@ namespace Tau
 			inline virtual void Add(const Object& value_) = 0;
 			inline virtual void Remove(const Object& value_) = 0;
 			inline virtual void AddToFront(const Object& value_) = 0;
-			inline virtual void RemoveFromFront(const Object& value_) = 0;
+			inline virtual void RemoveFromFront() = 0;
 			inline virtual void AddToBack(const Object& value_) = 0;
-			inline virtual void RemoveFromBack(const Object& value_) = 0;
+			inline virtual void RemoveFromBack() = 0;
 			inline virtual void Insert(const std::size_t& index_, const Object& value_) = 0;
 			inline virtual void Erase(const std::size_t& index_) = 0;
 			inline virtual Object Keys() const = 0; // TODO: return Array?
 			inline virtual Object Values() const = 0; // TODO: return Array?
+			inline virtual std::vector<std::uint8_t>& Data() = 0;
+			inline virtual const std::vector<std::uint8_t>& Data() const = 0;
 		};
 #pragma region Proxy::Empty
 		class Proxy::Empty:
@@ -146,7 +150,7 @@ namespace Tau
 			{
 				throw NotImplementedException(); // TODO
 			}
-			inline void RemoveFromFront(const Object& value_) override
+			inline void RemoveFromFront() override
 			{
 				throw NotImplementedException(); // TODO
 			}
@@ -154,7 +158,7 @@ namespace Tau
 			{
 				throw NotImplementedException(); // TODO
 			}
-			inline void RemoveFromBack(const Object& value_) override
+			inline void RemoveFromBack() override
 			{
 				throw NotImplementedException(); // TODO
 			}
@@ -171,6 +175,14 @@ namespace Tau
 				throw NotImplementedException(); // TODO
 			}
 			inline Object Values() const override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline virtual std::vector<std::uint8_t>& Data() override
+			{
+				throw NotImplementedException(); // TODO
+			}
+			inline virtual const std::vector<std::uint8_t>& Data() const override
 			{
 				throw NotImplementedException(); // TODO
 			}
@@ -263,13 +275,15 @@ namespace Tau
 		inline void Add(const Object& value_);
 		inline void Remove(const Object& value_);
 		inline void AddToFront(const Object& value_);
-		inline void RemoveFromFront(const Object& value_);
+		inline void RemoveFromFront();
 		inline void AddToBack(const Object& value_);
-		inline void RemoveFromBack(const Object& value_);
+		inline void RemoveFromBack();
 		inline void Insert(const std::size_t& index_, const Object& value_);
 		inline void Erase(const std::size_t& index_);
 		inline Object Keys() const;
 		inline Object Values() const;
+		inline const std::vector<std::uint8_t>& Data() const;
+		inline std::vector<std::uint8_t>& Data();
 	};
 	class None:
 		public Object
@@ -656,7 +670,7 @@ namespace Tau
 			{
 				objects.insert(objects.begin(), value_);
 			}
-			inline void RemoveFromFront(const Object& value_) override
+			inline void RemoveFromFront() override
 			{
 				objects.erase(objects.begin());
 			}
@@ -664,17 +678,9 @@ namespace Tau
 			{
 				objects.push_back(value_);
 			}
-			inline void RemoveFromBack(const Object& value_) override
+			inline void RemoveFromBack() override
 			{
 				objects.pop_back();
-			}
-			inline void Add(const Object& value_) override
-			{
-				AddToBack(value_);
-			}
-			inline void Remove(const Object& value_) override
-			{
-				RemoveFromBack(value_);
 			}
 			inline void Insert(const std::size_t& index_, const Object& value_) override
 			{
@@ -853,6 +859,99 @@ namespace Tau
 	public:
 		inline Map& operator = (const Map&) = delete;
 	};
+	class Binary:
+		public Object
+	{
+	public:
+		class Hex;
+		class Base64;
+	public:
+		class Proxy:
+			public Object::Proxy::Empty
+		{
+		protected:
+			std::vector<std::uint8_t> data;
+		public:
+			inline Tau::Type Type() const override
+			{
+				return Type::Data;
+			}
+			inline std::size_t Length() const override
+			{
+				return data.size();
+			}
+			inline void AddToFront(const Object& value_) override
+			{
+				const auto value = static_cast<int>(value_);
+
+				data.insert(data.begin(), value);
+			}
+			inline void RemoveFromFront() override
+			{
+				data.erase(data.begin());
+			}
+			inline void AddToBack(const Object& value_) override
+			{
+				const auto value = static_cast<int>(value_);
+
+				data.push_back(value);
+			}
+			inline void RemoveFromBack() override
+			{
+				data.pop_back();
+			}
+			inline Object Values() const override
+			{
+				std::vector<Object> objects;
+
+				objects.reserve(data.size());
+
+				for (auto &x : data)
+				{
+					objects.push_back(Object(static_cast<int>(x)));
+				}
+
+				return Array(objects);
+			}
+			inline std::vector<std::uint8_t>& Data() override
+			{
+				return data;
+			}
+			inline const std::vector<std::uint8_t>& Data() const override
+			{
+				return data;
+			}
+		};
+	protected:
+		inline Binary(const std::shared_ptr<Proxy>& proxy_):
+			Object(std::static_pointer_cast<Object::Proxy>(proxy_))
+		{
+		}
+	};
+#pragma region Binary::Hex
+	class Binary::Hex:
+		public Binary
+	{
+	public:
+		class Proxy:
+			public Binary::Proxy
+		{
+		};
+	public:
+		inline Hex():
+			Binary(std::static_pointer_cast<Binary::Proxy>(std::make_shared<Proxy>()))
+		{
+		}
+		inline Hex(const std::vector<Object>& objects_) :
+			Binary(std::static_pointer_cast<Binary::Proxy>(std::make_shared<Proxy>()))
+		{
+		}
+		inline Hex(const Hex&) = delete;
+		inline ~Hex() = default;
+	public:
+		inline Hex& operator = (const Hex&) = delete;
+	};
+#pragma endregion
 
 #pragma region Object
 	Object::Object():
@@ -963,17 +1062,17 @@ namespace Tau
 	{
 		proxy->AddToFront(value_);
 	}
-	void Object::RemoveFromFront(const Object& value_)
+	void Object::RemoveFromFront()
 	{
-		proxy->RemoveFromFront(value_);
+		proxy->RemoveFromFront();
 	}
 	void Object::AddToBack(const Object& value_)
 	{
 		proxy->AddToBack(value_);
 	}
-	void Object::RemoveFromBack(const Object& value_)
+	void Object::RemoveFromBack()
 	{
-		proxy->RemoveFromBack(value_);
+		proxy->RemoveFromBack();
 	}
 	void Object::Insert(const std::size_t& index_, const Object& value_)
 	{
@@ -990,6 +1089,14 @@ namespace Tau
 	Object Object::Values() const
 	{
 		return proxy->Values();
+	}
+	std::vector<std::uint8_t>& Object::Data()
+	{
+		return proxy->Data();
+	}
+	const std::vector<std::uint8_t>& Object::Data() const
+	{
+		return proxy->Data();
 	}
 #pragma endregion
 #pragma region Array
@@ -1024,6 +1131,34 @@ namespace Tau
 	class Stringifier
 	{
 	protected:
+		inline std::string ToHexCharacter(const std::uint8_t& value_) const
+		{
+			switch (value_)
+			{
+			case	0x0:	return "0";
+			case	0x1:	return "1";
+			case	0x2:	return "2";
+			case	0x3:	return "3";
+			case	0x4:	return "4";
+			case	0x5:	return "5";
+			case	0x6:	return "6";
+			case	0x7:	return "7";
+			case	0x8:	return "8";
+			case	0x9:	return "9";
+			case	0xA:	return "A";
+			case	0xB:	return "B";
+			case	0xC:	return "C";
+			case	0xD:	return "D";
+			case	0xE:	return "E";
+			default:		return "F";
+			}
+		}
+		inline std::string ToHex(const std::uint8_t& value_) const
+		{
+			const auto hex = ToHexCharacter(value_ >> 4) + ToHexCharacter(value_ & 0xF);
+
+			return hex;
+		}
 		inline std::string Screen(const std::string& value_) const
 		{
 			const auto &withoutDoubleQuotes	= std::regex_replace(value_, std::regex("\""), "\\\"");
@@ -1120,6 +1255,24 @@ namespace Tau
 
 				return "{\n" + stringifiedValues + Tab(level_) + "}";
 			}
+			else if (object_.Is<Binary::Hex>())
+			{
+				const auto data = object_.Data();
+
+				std::string stringifiedValues = "";
+
+				stringifiedValues.reserve(data.size() * 2);
+
+				for (int i = 0; i < static_cast<int>(data.size()); ++i)
+				{
+					const auto value = data[i];
+					const auto stringifiedValue = ToHex(value);
+
+					stringifiedValues += stringifiedValue;
+				}
+
+				return "hex (" + stringifiedValues + ")";
+			}
 
 			throw NotImplementedException();
 		}
@@ -1127,6 +1280,96 @@ namespace Tau
 		inline std::string Stringify(const Object& object_) const
 		{
 			return Stringify(object_, 0);
+		}
+	};
+	class Parser
+	{
+	protected:
+		inline bool IsWhitespace(const std::string::value_type& value_) const
+		{
+			return
+				value_ == ' ' ||
+				value_ == '\t' ||
+				value_ == '\r' ||
+				value_ == '\n';
+		}
+		inline std::string RemoveComments(const std::string& input_) const
+		{
+			return input_; // TODO
+		}
+		inline std::string::const_iterator SkipWhitespaces(const std::string& input_, std::string::const_iterator it_) const
+		{
+			while (it_ != input_.end() && IsWhitespace(*it_))
+			{
+				++it_;
+			}
+
+			return it_;
+		}
+		inline bool Parse(const std::string& input_, std::string::const_iterator& it_, const std::string& text_) const
+		{
+			auto it = it_;
+
+			for (auto &character : text_)
+			{
+				if (it != input_.end() && *it == character)
+				{
+					++it;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			it_ = it;
+
+			return true;
+		}
+		inline bool ParseNone(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			if (Parse(input_, it_, "none"))
+			{
+				result_ = nullptr;
+
+				return true;
+			}
+
+			return false;
+		}
+		inline bool ParseAnything(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			auto it		= SkipWhitespaces(input_, it_);
+
+			if (ParseNone(input_, it_, result_))
+			{
+				return true;
+			}
+
+			return false;
+		}
+	public:
+		inline Object Parse(const std::string& input_) const
+		{
+			const auto input	= RemoveComments(input_);
+			auto it				= input.cbegin();
+			auto object			= Object();
+
+			// try to parse anything, if nothing was found just return "none" as result
+			if (!ParseAnything(input, it, object))
+			{
+				object = nullptr;
+			}
+
+			// check if anything left except whitespaces
+			it = SkipWhitespaces(input, it);
+
+			if (it != input.end())
+			{
+				throw Exception();
+			}
+
+			return object;
 		}
 	};
 }
