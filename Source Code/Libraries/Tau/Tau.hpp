@@ -1337,11 +1337,32 @@ namespace Tau
 
 			return false;
 		}
+		inline bool ParseBoolean(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			if (Parse(input_, it_, "true"))
+			{
+				result_ = true;
+
+				return true;
+			}
+			else if (Parse(input_, it_, "false"))
+			{
+				result_ = false;
+
+				return true;
+			}
+
+			return false;
+		}
 		inline bool ParseAnything(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
 		{
 			auto it		= SkipWhitespaces(input_, it_);
 
 			if (ParseNone(input_, it_, result_))
+			{
+				return true;
+			}
+			else if (ParseBoolean(input_, it_, result_))
 			{
 				return true;
 			}

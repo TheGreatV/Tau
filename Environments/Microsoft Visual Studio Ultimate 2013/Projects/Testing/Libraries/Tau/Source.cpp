@@ -53,7 +53,7 @@ namespace Testing
 			protected:
 				SUT::Object Parse(const std::string& input_)
 				{
-					return SUT::Parser().Parse("none");
+					return SUT::Parser().Parse(input_);
 				}
 			public:
 				TEST_METHOD(None)
@@ -61,6 +61,18 @@ namespace Testing
 					auto object = Parse("none");
 
 					Assert::IsTrue(object == SUT::Object(nullptr));
+				}
+				TEST_METHOD(Boolean_True)
+				{
+					auto object = Parse("true");
+
+					Assert::IsTrue(object == SUT::Object(true));
+				}
+				TEST_METHOD(Boolean_False)
+				{
+					auto object = Parse("false");
+
+					Assert::IsTrue(object == SUT::Object(false));
 				}
 			};
 		}
