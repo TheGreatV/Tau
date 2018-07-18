@@ -1293,6 +1293,44 @@ namespace Tau
 				value_ == '\r' ||
 				value_ == '\n';
 		}
+		inline bool IsDigit(const std::string::value_type& value_) const
+		{
+			return
+				value_ == '0' ||
+				value_ == '1' ||
+				value_ == '2' ||
+				value_ == '3' ||
+				value_ == '4' ||
+				value_ == '5' ||
+				value_ == '6' ||
+				value_ == '7' ||
+				value_ == '8' ||
+				value_ == '9';
+		}
+		inline int ToDecimal(const std::string& text_) const
+		{
+			// integers
+			auto value	= int(0);
+			auto factor	= int(1);
+
+			for (auto it = text_.crbegin(); it != text_.crend(); ++it)
+			{
+				const auto &character = *it;
+
+				if (!IsDigit(character))
+				{
+					throw Exception(); // TODO
+				}
+
+				const auto grade = character - L'0';
+
+				value += grade * factor;
+
+				factor *= 10;
+			}
+
+			return value;
+		}
 		inline std::string RemoveComments(const std::string& input_) const
 		{
 			return input_; // TODO
@@ -1354,16 +1392,66 @@ namespace Tau
 
 			return false;
 		}
+		inline bool ParseDecimalIntegerNumber(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			const auto expression	= std::regex("^\\s*((?:\\+|-)?)\\s*((?:\\d|\\s)*)");
+			auto match				= std::smatch();
+
+			if (std::regex_search(it_, input_.end(), match, expression))
+			{
+				it_ = match[0].second;
+
+				const auto isSignPositive = match[1] != "-";
+				const auto valueText = std::regex_replace(static_cast<std::string>(match[2]), std::regex("\\s"), "");
+				const auto decimalValue = ToDecimal(valueText);
+
+				result_ = isSignPositive
+					? Object(decimalValue)
+					: Object(-decimalValue);
+
+				return true;
+			}
+
+			return false;
+		}
+		inline bool ParseIntegerNumber(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			if (ParseDecimalIntegerNumber(input_, it_, result_))
+			{
+				return true;
+			}
+
+			return false;
+		}
+		inline bool ParseNumber(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			if (ParseIntegerNumber(input_, it_, result_))
+			{
+				return true;
+			}
+
+			return false;
+		}
 		inline bool ParseAnything(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
 		{
 			auto it		= SkipWhitespaces(input_, it_);
 
-			if (ParseNone(input_, it_, result_))
+			if (ParseNone(input_, it, result_))
 			{
+				it_ = it;
+
 				return true;
 			}
-			else if (ParseBoolean(input_, it_, result_))
+			else if (ParseBoolean(input_, it, result_))
 			{
+				it_ = it;
+				
+				return true;
+			}
+			else if (ParseNumber(input_, it, result_))
+			{
+				it_ = it;
+
 				return true;
 			}
 

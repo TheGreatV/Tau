@@ -74,6 +74,21 @@ namespace Testing
 
 					Assert::IsTrue(object == SUT::Object(false));
 				}
+				TEST_METHOD(Number_Integer_Decimal)
+				{
+					Assert::IsTrue(Parse("0") == SUT::Object(0));
+					Assert::IsTrue(Parse("1") == SUT::Object(1));
+					Assert::IsTrue(Parse("5") == SUT::Object(5));
+					Assert::IsTrue(Parse("10") == SUT::Object(10));
+					Assert::IsTrue(Parse("12345") == SUT::Object(12345));
+					Assert::IsTrue(Parse("10 000 000") == SUT::Object(10000000));
+					Assert::IsTrue(Parse("+0") == SUT::Object(0));
+					Assert::IsTrue(Parse("+1") == SUT::Object(1));
+					Assert::IsTrue(Parse("+100") == SUT::Object(100));
+					Assert::IsTrue(Parse("-0") == SUT::Object(0));
+					Assert::IsTrue(Parse("-1") == SUT::Object(-1));
+					Assert::IsTrue(Parse("-100") == SUT::Object(-100));
+				}
 			};
 		}
 	}
