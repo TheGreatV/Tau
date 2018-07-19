@@ -1401,9 +1401,9 @@ namespace Tau
 			{
 				it_ = match[0].second;
 
-				const auto isSignPositive = match[1] != "-";
-				const auto valueText = std::regex_replace(static_cast<std::string>(match[2]), std::regex("\\s"), "");
-				const auto decimalValue = ToDecimal(valueText);
+				const auto isSignPositive	= match[1] != "-";
+				const auto valueText		= std::regex_replace(static_cast<std::string>(match[2]), std::regex("\\s"), "");
+				const auto decimalValue		= ToDecimal(valueText);
 
 				result_ = isSignPositive
 					? Object(decimalValue)
@@ -1423,10 +1423,74 @@ namespace Tau
 
 			return false;
 		}
+		inline bool ParseDecimalFloatingNumber(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			const auto expression = std::regex("^\\s*((?:\\+|-)?)\\s*((?:\\d|\\s)*)\\s*\\.\\s*((?:\\d|\\s)*)");
+			auto match = std::smatch();
+
+			if (std::regex_search(it_, input_.end(), match, expression))
+			{
+				it_ = match[0].second;
+
+				const auto isSignPositive	= match[1] != "-";
+				const auto valueText1		= std::regex_replace(static_cast<std::string>(match[2]), std::regex("\\s"), "");
+				const auto floatingValue1	= static_cast<double>(ToDecimal(valueText1));
+				const auto valueText2		= std::regex_replace(static_cast<std::string>(match[3]), std::regex("\\s"), "");
+				const auto floatingValue2	= static_cast<double>(ToDecimal(valueText2)) / std::pow<double>(10.0, valueText2.size());
+				const auto floatingValue	= floatingValue1 + floatingValue2;
+
+				result_ = isSignPositive
+					? Object(floatingValue)
+					: Object(-floatingValue);
+
+				return true;
+			}
+
+			return false;
+		}
+		inline bool ParseFloatingNumber(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			if (ParseDecimalFloatingNumber(input_, it_, result_))
+			{
+				return true;
+			}
+
+			return false;
+		}
 		inline bool ParseNumber(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
 		{
-			if (ParseIntegerNumber(input_, it_, result_))
+			if (ParseFloatingNumber(input_, it_, result_))
 			{
+				return true;
+			}
+			else if (ParseIntegerNumber(input_, it_, result_))
+			{
+				return true;
+			}
+
+			return false;
+		}
+		inline bool ParseString(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			const auto expression = std::regex("^((?:\\s*\".*[^(?:\\)]\"\\s*)+)\\s*");
+			auto match = std::smatch();
+
+			if (std::regex_search(it_, input_.end(), match, expression))
+			{
+				it_ = match[0].second;
+				
+				const auto text						= static_cast<std::string>(match[1]);
+				const auto textWithoutStartingBrace	= std::regex_replace(text, std::regex("^\\s*\""), "");
+				const auto textWithoutEndingBrace	= std::regex_replace(textWithoutStartingBrace, std::regex("\"\\s*$"), "");
+				const auto textWithoutMiddleBraces	= std::regex_replace(textWithoutEndingBrace, std::regex("(?=[^\\\\])\"\\s*\""), "");
+				const auto escapedBracesText		= std::regex_replace(textWithoutMiddleBraces, std::regex("\\\\\""), "\"");
+				const auto escapedNewlinesText		= std::regex_replace(escapedBracesText, std::regex("\\\\n"), "\n");
+				const auto escapedReturnText		= std::regex_replace(escapedNewlinesText, std::regex("\\\\r"), "\r");
+				const auto escapedTabText			= std::regex_replace(escapedReturnText, std::regex("\\\\t"), "\t");
+				const auto escapedVerticalTabText	= std::regex_replace(escapedTabText, std::regex("\\\\v"), "\v");
+
+				result_ = escapedVerticalTabText;
+
 				return true;
 			}
 
@@ -1446,6 +1510,12 @@ namespace Tau
 			{
 				it_ = it;
 				
+				return true;
+			}
+			else if (ParseString(input_, it, result_))
+			{
+				it_ = it;
+
 				return true;
 			}
 			else if (ParseNumber(input_, it, result_))

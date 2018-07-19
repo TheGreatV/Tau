@@ -89,6 +89,32 @@ namespace Testing
 					Assert::IsTrue(Parse("-1") == SUT::Object(-1));
 					Assert::IsTrue(Parse("-100") == SUT::Object(-100));
 				}
+				TEST_METHOD(Number_Floating_Decimal)
+				{
+					Assert::IsTrue(Parse("0.0") == SUT::Object(0.0));
+					Assert::IsTrue(Parse("1.0") == SUT::Object(1.0));
+					Assert::IsTrue(Parse("5.0") == SUT::Object(5.0));
+					Assert::IsTrue(Parse("10.0") == SUT::Object(10.0));
+					Assert::IsTrue(Parse("12345.0") == SUT::Object(12345.0));
+					Assert::IsTrue(Parse("10 000 000.0") == SUT::Object(10000000.0));
+					Assert::IsTrue(Parse("+0.0") == SUT::Object(0.0));
+					Assert::IsTrue(Parse("+1.0") == SUT::Object(1.0));
+					Assert::IsTrue(Parse("+100.0") == SUT::Object(100.0));
+					Assert::IsTrue(Parse("-0.0") == SUT::Object(0.0));
+					Assert::IsTrue(Parse("-1.0") == SUT::Object(-1.0));
+					Assert::IsTrue(Parse("-100.0") == SUT::Object(-100.0));
+					Assert::IsTrue(Parse("12 3 4 . 5 67") == SUT::Object(1234.567));
+				}
+				TEST_METHOD(String)
+				{
+					Assert::IsTrue(Parse("\"abc123\"") == SUT::Object("abc123"));
+					Assert::IsTrue(Parse("\"\\\"\"") == SUT::Object("\""));
+					Assert::IsTrue(Parse("\"\\n\"") == SUT::Object("\n"));
+					Assert::IsTrue(Parse("\"\\r\"") == SUT::Object("\r"));
+					Assert::IsTrue(Parse("\"\\v\"") == SUT::Object("\v"));
+					Assert::IsTrue(Parse("\"\\t\"") == SUT::Object("\t"));
+					Assert::IsTrue(Parse("\"x\"   \"y\"   \"z\"") == SUT::Object("xyz"));
+				}
 			};
 		}
 	}
