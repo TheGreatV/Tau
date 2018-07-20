@@ -1394,7 +1394,7 @@ namespace Tau
 		}
 		inline bool ParseDecimalIntegerNumber(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
 		{
-			const auto expression	= std::regex("^\\s*((?:\\+|-)?)\\s*((?:\\d|\\s)*)");
+			const auto expression	= std::regex("^\\s*((?:\\+|-)?)\\s*((?:\\d|\\s)+)");
 			auto match				= std::smatch();
 
 			if (std::regex_search(it_, input_.end(), match, expression))
@@ -1496,6 +1496,57 @@ namespace Tau
 
 			return false;
 		}
+		inline bool ParseArray(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			auto it = SkipWhitespaces(input_, it_);
+
+			if (Parse(input_, it, "array"))
+			{
+				auto it2 = SkipWhitespaces(input_, it);
+				
+				if (Parse(input_, it2, "("))
+				{
+					Array array;
+
+					while (true)
+					{
+						Object result;
+
+						if (!ParseAnything(input_, it2, result))
+						{
+							it2 = SkipWhitespaces(input_, it2);
+
+							Parse(input_, it2, ",");
+
+							break;
+						}
+
+						array.AddToBack(result);
+
+						if (!Parse(input_, it2, ","))
+						{
+							break;
+						}
+					}
+					
+					it2 = SkipWhitespaces(input_, it2);
+					
+					if (!Parse(input_, it2, ")"))
+					{
+						throw Exception();
+					}
+
+					result_ = array;
+
+					it_ = it2;
+
+					return true;
+				}
+			}
+			// TODO: []
+
+			return false;
+		}
 		inline bool ParseAnything(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
 		{
 			auto it		= SkipWhitespaces(input_, it_);
@@ -1519,6 +1570,12 @@ namespace Tau
 				return true;
 			}
 			else if (ParseNumber(input_, it, result_))
+			{
+				it_ = it;
+
+				return true;
+			}
+			else if (ParseArray(input_, it, result_))
 			{
 				it_ = it;
 

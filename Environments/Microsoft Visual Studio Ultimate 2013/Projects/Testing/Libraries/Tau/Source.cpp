@@ -115,6 +115,12 @@ namespace Testing
 					Assert::IsTrue(Parse("\"\\t\"") == SUT::Object("\t"));
 					Assert::IsTrue(Parse("\"x\"   \"y\"   \"z\"") == SUT::Object("xyz"));
 				}
+				TEST_METHOD(Array)
+				{
+					Assert::IsTrue(Parse("array()") == SUT::Array());
+					Assert::IsTrue(Parse("array(1,2,3)") == SUT::Array({ 1,2,3 }));
+					Assert::IsTrue(Parse("array(array())") == SUT::Array(std::vector<SUT::Object>({ SUT::Array() })));
+				}
 			};
 		}
 	}
