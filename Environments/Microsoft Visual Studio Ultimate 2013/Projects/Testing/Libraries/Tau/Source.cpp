@@ -107,6 +107,7 @@ namespace Testing
 				}
 				TEST_METHOD(String)
 				{
+					Assert::IsTrue(Parse("\"\"") == SUT::Object(""));
 					Assert::IsTrue(Parse("\"abc123\"") == SUT::Object("abc123"));
 					Assert::IsTrue(Parse("\"\\\"\"") == SUT::Object("\""));
 					Assert::IsTrue(Parse("\"\\n\"") == SUT::Object("\n"));
@@ -119,7 +120,14 @@ namespace Testing
 				{
 					Assert::IsTrue(Parse("array()") == SUT::Array());
 					Assert::IsTrue(Parse("array(1,2,3)") == SUT::Array({ 1,2,3 }));
+					Assert::IsTrue(Parse("array(1,2,3,)") == SUT::Array({ 1, 2, 3 }));
 					Assert::IsTrue(Parse("array(array())") == SUT::Array(std::vector<SUT::Object>({ SUT::Array() })));
+				}
+				TEST_METHOD(Map)
+				{
+					Assert::IsTrue(Parse("map()") == SUT::Map());
+					Assert::IsTrue(Parse("map(true:false)") == SUT::Map({ SUT::Pair(true, false) }));
+					Assert::IsTrue(Parse("map(1:\"1\",2:\"2\")") == SUT::Map({ SUT::Pair(1, "1"), SUT::Pair(2, "2") }));
 				}
 			};
 		}

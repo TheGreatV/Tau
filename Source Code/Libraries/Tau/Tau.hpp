@@ -1472,8 +1472,9 @@ namespace Tau
 		}
 		inline bool ParseString(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
 		{
-			const auto expression = std::regex("^((?:\\s*\".*[^(?:\\)]\"\\s*)+)\\s*");
-			auto match = std::smatch();
+			// const auto expression	= std::regex("^((?:\\s*\".*[^(?:\\)]\"\\s*)+)\\s*");
+			const auto expression	= std::regex("^((?:\\\"(?:[^\\\\\\\"]|\\\\\\\"|\\\\\\\\|\\\\n|\\\\r|\\\\t|\\\\v)*\\\"\\s*)+)");
+			auto match				= std::smatch();
 
 			if (std::regex_search(it_, input_.end(), match, expression))
 			{
@@ -1510,20 +1511,17 @@ namespace Tau
 
 					while (true)
 					{
-						Object result;
+						Object value;
 
-						if (!ParseAnything(input_, it2, result))
+						if (ParseAnything(input_, it2, value))
 						{
+							array.AddToBack(value);
+							
 							it2 = SkipWhitespaces(input_, it2);
 
 							Parse(input_, it2, ",");
-
-							break;
 						}
-
-						array.AddToBack(result);
-
-						if (!Parse(input_, it2, ","))
+						else
 						{
 							break;
 						}
@@ -1544,6 +1542,68 @@ namespace Tau
 				}
 			}
 			// TODO: []
+
+			return false;
+		}
+		inline bool ParseMap(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			auto it = SkipWhitespaces(input_, it_);
+
+			if (Parse(input_, it, "map"))
+			{
+				auto it2 = SkipWhitespaces(input_, it);
+				
+				if (Parse(input_, it2, "("))
+				{
+					Map map;
+
+					while (true)
+					{
+						it2 = SkipWhitespaces(input_, it2);
+						
+						Object key;
+
+						if (ParseAnything(input_, it2, key))
+						{
+							it2 = SkipWhitespaces(input_, it2);
+
+							if (!Parse(input_, it2, ":"))
+							{
+								throw Exception();
+							}
+
+							Object value;
+
+							if (!ParseAnything(input_, it2, value))
+							{
+								throw Exception();
+							}
+
+							map[key] = value;
+
+							Parse(input_, it2, ",");
+						}
+						else
+						{
+							break;
+						}
+					}
+					
+					it2 = SkipWhitespaces(input_, it2);
+					
+					if (!Parse(input_, it2, ")"))
+					{
+						throw Exception();
+					}
+
+					result_ = map;
+
+					it_ = it2;
+
+					return true;
+				}
+			}
+			// TODO: {}
 
 			return false;
 		}
@@ -1576,6 +1636,12 @@ namespace Tau
 				return true;
 			}
 			else if (ParseArray(input_, it, result_))
+			{
+				it_ = it;
+
+				return true;
+			}
+			else if (ParseMap(input_, it, result_))
 			{
 				it_ = it;
 
