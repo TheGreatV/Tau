@@ -863,6 +863,8 @@ namespace Tau
 		public Object
 	{
 	public:
+		using Value = std::vector<std::uint8_t>;
+	public:
 		class Hex;
 		class Base64;
 	public:
@@ -870,7 +872,30 @@ namespace Tau
 			public Object::Proxy::Empty
 		{
 		protected:
-			std::vector<std::uint8_t> data;
+			Value data;
+		public:
+			inline Proxy(const Value& value_ = Value()):
+				data(value_)
+			{
+			}
+		public:
+			inline bool operator == (const std::shared_ptr<Object::Proxy>& source_) const override
+			{
+				// happy pass
+				if (source_.get() == this)
+				{
+					return true;
+				}
+				
+				const auto otherProxy = std::dynamic_pointer_cast<Proxy>(source_);
+
+				if (otherProxy == nullptr)
+				{
+					return false;
+				}
+				
+				return data == otherProxy->data;
+			}
 		public:
 			inline Tau::Type Type() const override
 			{
@@ -913,11 +938,11 @@ namespace Tau
 
 				return Array(objects);
 			}
-			inline std::vector<std::uint8_t>& Data() override
+			inline Value& Data() override
 			{
 				return data;
 			}
-			inline const std::vector<std::uint8_t>& Data() const override
+			inline const Value& Data() const override
 			{
 				return data;
 			}
@@ -936,14 +961,19 @@ namespace Tau
 		class Proxy:
 			public Binary::Proxy
 		{
+		public:
+			inline Proxy(const Value& value_ = Value()):
+				Binary::Proxy(value_)
+			{
+			}
 		};
 	public:
 		inline Hex():
 			Binary(std::static_pointer_cast<Binary::Proxy>(std::make_shared<Proxy>()))
 		{
 		}
-		inline Hex(const std::vector<Object>& objects_) :
-			Binary(std::static_pointer_cast<Binary::Proxy>(std::make_shared<Proxy>()))
+		inline Hex(const Value& value_) :
+			Binary(std::static_pointer_cast<Binary::Proxy>(std::make_shared<Proxy>(value_)))
 		{
 		}
 		inline Hex(const Hex&) = delete;
@@ -1307,6 +1337,52 @@ namespace Tau
 				value_ == '8' ||
 				value_ == '9';
 		}
+		inline bool IsHex(const std::string::value_type& value_) const
+		{
+			return
+				IsDigit(value_) ||
+				value_ == 'a' ||
+				value_ == 'A' ||
+				value_ == 'b' ||
+				value_ == 'B' ||
+				value_ == 'c' ||
+				value_ == 'C' ||
+				value_ == 'd' ||
+				value_ == 'D' ||
+				value_ == 'e' ||
+				value_ == 'E' ||
+				value_ == 'f' ||
+				value_ == 'F';
+		}
+		inline std::uint8_t GetHexValue(const std::string::value_type& value_) const
+		{
+			switch (value_)
+			{
+			case '0': return 0x0;
+			case '1': return 0x1;
+			case '2': return 0x2;
+			case '3': return 0x3;
+			case '4': return 0x4;
+			case '5': return 0x5;
+			case '6': return 0x6;
+			case '7': return 0x7;
+			case '8': return 0x8;
+			case '9': return 0x9;
+			case 'a': return 0xa;
+			case 'A': return 0xA;
+			case 'b': return 0xb;
+			case 'B': return 0xB;
+			case 'c': return 0xc;
+			case 'C': return 0xC;
+			case 'd': return 0xd;
+			case 'D': return 0xD;
+			case 'e': return 0xe;
+			case 'E': return 0xE;
+			case 'f': return 0xf;
+			case 'F': return 0xF;
+			default: throw Exception();
+			}
+		}
 		inline int ToDecimal(const std::string& text_) const
 		{
 			// integers
@@ -1607,6 +1683,85 @@ namespace Tau
 
 			return false;
 		}
+		inline bool ParseHexBinary(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			auto it = SkipWhitespaces(input_, it_);
+
+			if (Parse(input_, it, "hex"))
+			{
+				auto it2 = SkipWhitespaces(input_, it);
+				
+				if (Parse(input_, it2, "("))
+				{
+					Binary::Value binaryValues;
+
+					while (true)
+					{
+						it2 = SkipWhitespaces(input_, it2);
+						
+						if (it2 == input_.end())
+						{
+							throw Exception();
+						}
+
+						const auto firstCharacter = *it2;
+
+						++it2;
+
+						if (firstCharacter == ')')
+						{
+							break;
+						}
+
+						if (!IsHex(firstCharacter))
+						{
+							break;
+						}
+
+						const auto mostSignificantHex = GetHexValue(firstCharacter);
+
+						it2 = SkipWhitespaces(input_, it2);
+						
+						if (it2 == input_.end())
+						{
+							throw Exception();
+						}
+						
+						const auto secondCharacter = *it2;
+
+						++it2;
+
+						if (!IsHex(secondCharacter))
+						{
+							break;
+						}
+						
+						const auto lessSignificantHex = GetHexValue(secondCharacter);
+						const auto value = lessSignificantHex | (mostSignificantHex << 4);
+
+						binaryValues.push_back(value);
+					}
+
+					result_ = Binary::Hex(binaryValues);
+
+					it_ = it2;
+
+					return true;
+				}
+			}
+			// TODO: {}
+
+			return false;
+		}
+		inline bool ParseBinary(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
+		{
+			if (ParseHexBinary(input_, it_, result_))
+			{
+				return true;
+			}
+
+			return false;
+		}
 		inline bool ParseAnything(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
 		{
 			auto it		= SkipWhitespaces(input_, it_);
@@ -1642,6 +1797,12 @@ namespace Tau
 				return true;
 			}
 			else if (ParseMap(input_, it, result_))
+			{
+				it_ = it;
+
+				return true;
+			}
+			else if (ParseBinary(input_, it, result_))
 			{
 				it_ = it;
 
