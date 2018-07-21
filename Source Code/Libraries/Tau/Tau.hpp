@@ -22,7 +22,7 @@ namespace Tau
 		String,
 		Array,
 		Map,
-		Data,
+		Binary,
 	};
 
 	class Exception
@@ -899,7 +899,7 @@ namespace Tau
 		public:
 			inline Tau::Type Type() const override
 			{
-				return Type::Data;
+				return Type::Binary;
 			}
 			inline std::size_t Length() const override
 			{
