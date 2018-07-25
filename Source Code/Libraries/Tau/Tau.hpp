@@ -1264,7 +1264,7 @@ namespace Tau
 					stringifiedValues += Tab(nextLevel) + stringifiedValue + ",\n";
 				}
 
-				return "[\n" + stringifiedValues + Tab(level_) + "]";
+				return "array (\n" + stringifiedValues + Tab(level_) + ")";
 			}
 			else if (object_.Is<Map>())
 			{
@@ -1283,7 +1283,7 @@ namespace Tau
 					stringifiedValues += Tab(nextLevel) + stringifiedKey + ": " + stringifiedValue + ",\n";
 				}
 
-				return "{\n" + stringifiedValues + Tab(level_) + "}";
+				return "map (\n" + stringifiedValues + Tab(level_) + ")";
 			}
 			else if (object_.Is<Binary::Hex>())
 			{
@@ -1473,7 +1473,7 @@ namespace Tau
 			const auto expression	= std::regex("^\\s*((?:\\+|-)?)\\s*((?:\\d|\\s)+)");
 			auto match				= std::smatch();
 
-			if (std::regex_search(it_, input_.end(), match, expression))
+			if (std::regex_search(it_, input_.end(), match, expression, std::regex_constants::match_flag_type::match_continuous))
 			{
 				it_ = match[0].second;
 
@@ -1504,7 +1504,7 @@ namespace Tau
 			const auto expression = std::regex("^\\s*((?:\\+|-)?)\\s*((?:\\d|\\s)*)\\s*\\.\\s*((?:\\d|\\s)*)");
 			auto match = std::smatch();
 
-			if (std::regex_search(it_, input_.end(), match, expression))
+			if (std::regex_search(it_, input_.end(), match, expression, std::regex_constants::match_flag_type::match_continuous))
 			{
 				it_ = match[0].second;
 
@@ -1548,11 +1548,11 @@ namespace Tau
 		}
 		inline bool ParseString(const std::string& input_, std::string::const_iterator& it_, Object& result_) const
 		{
-			// const auto expression	= std::regex("^((?:\\s*\".*[^(?:\\)]\"\\s*)+)\\s*");
-			const auto expression	= std::regex("^((?:\\\"(?:[^\\\\\\\"]|\\\\\\\"|\\\\\\\\|\\\\n|\\\\r|\\\\t|\\\\v)*\\\"\\s*)+)");
+			// const auto expression	= std::regex("^((?:\\\"(?:[^\\\\\\\"]|\\\\\\\"|\\\\\\\\|\\\\n|\\\\r|\\\\t|\\\\v)*\\\"\\s*)+)");
+			const auto expression	= std::regex("((?:\"(?:[^\\\\\"]|\\\\\"|\\\\\\\\|\\\\n|\\\\r|\\\\t|\\\\v)*\"\\s*)+)"); // ((?:"(?:[^\\"]|\\"|\\\\|\\n|\\r|\\t|\\v)*"\s*)+)
 			auto match				= std::smatch();
 
-			if (std::regex_search(it_, input_.end(), match, expression))
+			if (std::regex_search(it_, input_.end(), match, expression, std::regex_constants::match_flag_type::match_continuous))
 			{
 				it_ = match[0].second;
 				
@@ -1656,6 +1656,8 @@ namespace Tau
 							}
 
 							map[key] = value;
+
+							it2 = SkipWhitespaces(input_, it2);
 
 							Parse(input_, it2, ",");
 						}

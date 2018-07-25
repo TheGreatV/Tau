@@ -158,6 +158,24 @@ namespace Testing
 					Assert::IsTrue(Parse("hex(F0 F1 F2 F3 F4 F5 F6 F7 F8 F9 Fa FA Fb FB Fc FC Fd FD Fe FE Ff FF)") == SUT::Binary::Hex(SUT::Binary::Value({ 0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFa, 0xFA, 0xFb, 0xFB, 0xFc, 0xFC, 0xFd, 0xFD, 0xFe, 0xFE, 0xFf, 0xFF })));
 				}
 			};
+			TEST_CLASS(Regression)
+			{
+			protected:
+				SUT::Object Parse(const std::string& input_)
+				{
+					return SUT::Parser().Parse(input_);
+				}
+			public:
+				TEST_METHOD(ParsingStringsInsideMap)
+				{
+					auto object = Parse("map( \"x\": 1,\n\"y\": 2,)");
+
+					Assert::IsTrue(object == SUT::Map({
+						SUT::Pair("x", 1),
+						SUT::Pair("y", 2),
+					}));
+				}
+			};
 		}
 	}
 }
