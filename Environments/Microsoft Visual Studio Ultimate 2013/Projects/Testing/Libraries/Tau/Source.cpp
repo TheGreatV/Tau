@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
+#include <chrono>
+#include <string>
 
 #include <../Tau/Tau.hpp>
 
@@ -174,6 +176,99 @@ namespace Testing
 						SUT::Pair("x", 1),
 						SUT::Pair("y", 2),
 					}));
+				}
+			};
+			TEST_CLASS(Performance)
+			{
+			protected:
+				SUT::Object Parse(const std::string& input_)
+				{
+					return SUT::Parser().Parse(input_);
+				}
+			public:
+				TEST_METHOD(ParsingHex)
+				{
+					const auto beginTime = std::chrono::high_resolution_clock::now();
+
+					const char lookup[] = {
+						'0',
+						'1',
+						'2',
+						'3',
+						'4',
+						'5',
+						'6',
+						'7',
+						'8',
+						'9',
+						'A',
+						'B',
+						'C',
+						'D',
+						'E',
+						'F',
+					};
+
+					std::string text = "hex(";
+
+					const auto totalMiBs = 4;
+
+					text.reserve(totalMiBs * 1024 * 1024 * 3 + 256);
+
+					// totalMiBs MiB
+					for (size_t l = 0; l < totalMiBs; ++l)
+					{
+						// 1MiB
+						for (size_t k = 0; k < 1024; ++k)
+						{
+							// 1 KiB
+							for (size_t j = 0; j < 4; ++j)
+							{
+								for (size_t i = 0; i <= 0xFF; ++i)
+								{
+									text += lookup[i / 0x10];
+									text += lookup[i % 0x10];
+									text += ' ';
+								}
+							}
+						}
+					}
+
+					text += ")";
+
+					auto object = Parse(text);
+
+					const auto endTime = std::chrono::high_resolution_clock::now();
+
+					const auto millisecondsSpent = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - beginTime).count();
+
+					Logger::WriteMessage(("milliseconds spent: " + std::to_string(millisecondsSpent)).c_str());
+
+					const auto data = object.Data();
+
+					auto index = 0u;
+
+					// totalMiBs MiB
+					for (size_t l = 0; l < totalMiBs; ++l)
+					{
+						// 1MiB
+						for (size_t k = 0; k < 1024; ++k)
+						{
+							// 1 KiB
+							for (size_t j = 0; j < 4; ++j)
+							{
+								for (size_t i = 0; i <= 0xFF; ++i)
+								{
+									if (data[index] != i)
+									{
+										Assert::Fail((L"Elenemt at #" + std::to_wstring(index) + L" with value " + std::to_wstring(data[index]) + L" is not equal to reference value " + std::to_wstring(i)).c_str());
+									}
+
+									++index;
+								}
+							}
+						}
+					}
 				}
 			};
 		}
